@@ -58,8 +58,7 @@ mks_node_t *mk_assignment(mks_node_t *name, mks_node_t *value) {
   return node;
 }
 
-mks_node_t *mk_if_stmt(mks_node_t *condition, mks_node_t *true_body,
-                       mks_node_t *false_body) {
+mks_node_t *mk_if_stmt(mks_node_t *condition, mks_node_t *true_body, mks_node_t *false_body) {
   mks_node_t *node = mk_node(IF_STMT);
 
   mks_if_stmt_t *ifst = malloc(sizeof(mks_if_stmt_t));
@@ -188,9 +187,7 @@ char *pretty_print_node(mks_node_t *node) {
     char *condition = pretty_print_node(node->if_stmt->condition);
     char *true_body = pretty_print_node(node->if_stmt->true_body);
     char *false_body = pretty_print_node(node->if_stmt->false_body);
-    asprintf(&bfr,
-             "<mks_if_smtmt_t: condition=%s, true_body=%s, false_body=%s>",
-             condition, true_body, false_body);
+    asprintf(&bfr, "<mks_if_smtmt_t: condition=%s, true_body=%s, false_body=%s>", condition, true_body, false_body);
     free(condition);
     free(true_body);
     free(false_body);
