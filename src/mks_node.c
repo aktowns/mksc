@@ -103,6 +103,94 @@ mks_node_t *mk_ne_operator(mks_node_t *left, mks_node_t *right) {
   return node;
 }
 
+mks_node_t *mk_gt_operator(mks_node_t *left, mks_node_t *right) {
+  mks_node_t *node = mk_node(GT_OP);
+
+  mks_gt_operator_t *gt = malloc(sizeof(mks_gt_operator_t));
+  gt->left = left;
+  gt->right = right;
+  node->gt_op = gt;
+
+  return node;
+}
+
+mks_node_t *mk_lt_operator(mks_node_t *left, mks_node_t *right) {
+  mks_node_t *node = mk_node(LT_OP);
+
+  mks_lt_operator_t *lt = malloc(sizeof(mks_lt_operator_t));
+  lt->left = left;
+  lt->right = right;
+  node->lt_op = lt;
+
+  return node;
+}
+
+mks_node_t *mk_ge_operator(mks_node_t *left, mks_node_t *right) {
+  mks_node_t *node = mk_node(GE_OP);
+
+  mks_ge_operator_t *ge = malloc(sizeof(mks_ge_operator_t));
+  ge->left = left;
+  ge->right = right;
+  node->ge_op = ge;
+
+  return node;
+}
+
+mks_node_t *mk_le_operator(mks_node_t *left, mks_node_t *right) {
+  mks_node_t *node = mk_node(LE_OP);
+
+  mks_le_operator_t *le = malloc(sizeof(mks_le_operator_t));
+  le->left = left;
+  le->right = right;
+  node->le_op = le;
+
+  return node;
+}
+
+mks_node_t *mk_plus_operator(mks_node_t *left, mks_node_t *right) {
+  mks_node_t *node = mk_node(PLUS_OP);
+
+  mks_plus_operator_t *plus = malloc(sizeof(mks_plus_operator_t));
+  plus->left = left;
+  plus->right = right;
+  node->plus_op = plus;
+
+  return node;
+}
+
+mks_node_t *mk_minus_operator(mks_node_t *left, mks_node_t *right) {
+  mks_node_t *node = mk_node(MINUS_OP);
+
+  mks_minus_operator_t *minus = malloc(sizeof(mks_minus_operator_t));
+  minus->left = left;
+  minus->right = right;
+  node->minus_op = minus;
+
+  return node;
+}
+
+mks_node_t *mk_mult_operator(mks_node_t *left, mks_node_t *right) {
+  mks_node_t *node = mk_node(MULT_OP);
+
+  mks_mult_operator_t *mult = malloc(sizeof(mks_mult_operator_t));
+  mult->left = left;
+  mult->right = right;
+  node->mult_op = mult;
+
+  return node;
+}
+
+mks_node_t *mk_divide_operator(mks_node_t *left, mks_node_t *right) {
+  mks_node_t *node = mk_node(DIVIDE_OP);
+
+  mks_divide_operator_t *divide = malloc(sizeof(mks_divide_operator_t));
+  divide->left = left;
+  divide->right = right;
+  node->divide_op = divide;
+
+  return node;
+}
+
 void mks_free(mks_node_t *node) {
   if (node == NULL)
     return;
@@ -149,9 +237,57 @@ void mks_free(mks_node_t *node) {
     free(node);
     return;
   case NE_OP:
-    mks_free(node->eq_op->left);
+    mks_free(node->ne_op->left);
     mks_free(node->ne_op->right);
     free(node->ne_op);
+    free(node);
+    return;
+  case LE_OP:
+    mks_free(node->le_op->left);
+    mks_free(node->le_op->right);
+    free(node->le_op);
+    free(node);
+    return;
+  case GE_OP:
+    mks_free(node->ge_op->left);
+    mks_free(node->ge_op->right);
+    free(node->ge_op);
+    free(node);
+    return;
+  case LT_OP:
+    mks_free(node->lt_op->left);
+    mks_free(node->lt_op->right);
+    free(node->lt_op);
+    free(node);
+    return;
+  case GT_OP:
+    mks_free(node->gt_op->left);
+    mks_free(node->gt_op->right);
+    free(node->gt_op);
+    free(node);
+    return;
+  case PLUS_OP:
+    mks_free(node->plus_op->left);
+    mks_free(node->plus_op->right);
+    free(node->plus_op);
+    free(node);
+    return;
+  case MINUS_OP:
+    mks_free(node->minus_op->left);
+    mks_free(node->minus_op->right);
+    free(node->minus_op);
+    free(node);
+    return;
+  case MULT_OP:
+    mks_free(node->mult_op->left);
+    mks_free(node->mult_op->right);
+    free(node->mult_op);
+    free(node);
+    return;
+  case DIVIDE_OP:
+    mks_free(node->divide_op->left);
+    mks_free(node->divide_op->right);
+    free(node->divide_op);
     free(node);
     return;
   }
@@ -217,8 +353,72 @@ char *pretty_print_node(mks_node_t *node) {
     free(right);
     return bfr;
   }
-  default:
-    free(bfr);
-    return "Unknown node type";
+  case LE_OP: {
+    char *left = pretty_print_node(node->le_op->left);
+    char *right = pretty_print_node(node->le_op->right);
+    asprintf(&bfr, "<mk_le_op_t: left=%s, right=%s>", left, right);
+    free(left);
+    free(right);
+    return bfr;
   }
+  case GE_OP: {
+    char *left = pretty_print_node(node->ge_op->left);
+    char *right = pretty_print_node(node->ge_op->right);
+    asprintf(&bfr, "<mk_ge_op_t: left=%s, right=%s>", left, right);
+    free(left);
+    free(right);
+    return bfr;
+  }
+  case LT_OP: {
+    char *left = pretty_print_node(node->lt_op->left);
+    char *right = pretty_print_node(node->lt_op->right);
+    asprintf(&bfr, "<mk_lt_op_t: left=%s, right=%s>", left, right);
+    free(left);
+    free(right);
+    return bfr;
+  }
+  case GT_OP: {
+    char *left = pretty_print_node(node->gt_op->left);
+    char *right = pretty_print_node(node->gt_op->right);
+    asprintf(&bfr, "<mk_gt_op_t: left=%s, right=%s>", left, right);
+    free(left);
+    free(right);
+    return bfr;
+  }
+  case PLUS_OP: {
+    char *left = pretty_print_node(node->plus_op->left);
+    char *right = pretty_print_node(node->plus_op->right);
+    asprintf(&bfr, "<mk_plus_op_t: left=%s, right=%s>", left, right);
+    free(left);
+    free(right);
+    return bfr;
+  }
+  case MINUS_OP: {
+    char *left = pretty_print_node(node->minus_op->left);
+    char *right = pretty_print_node(node->minus_op->right);
+    asprintf(&bfr, "<mk_minus_op_t: left=%s, right=%s>", left, right);
+    free(left);
+    free(right);
+    return bfr;
+  }
+  case MULT_OP: {
+    char *left = pretty_print_node(node->mult_op->left);
+    char *right = pretty_print_node(node->mult_op->right);
+    asprintf(&bfr, "<mk_mult_op_t: left=%s, right=%s>", left, right);
+    free(left);
+    free(right);
+    return bfr;
+  }
+  case DIVIDE_OP: {
+    char *left = pretty_print_node(node->divide_op->left);
+    char *right = pretty_print_node(node->divide_op->right);
+    asprintf(&bfr, "<mk_divide_op_t: left=%s, right=%s>", left, right);
+    free(left);
+    free(right);
+    return bfr;
+  }
+  }
+
+  free(bfr);
+  return "Unknown node type";
 }
