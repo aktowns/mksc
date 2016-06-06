@@ -1,13 +1,18 @@
-CFLAGS=-O1 -g -Werror -Wall -std=gnu11 -fsanitize=address -fblocks -fintegrated-as -I./blocksruntime/BlocksRuntime/ -fno-omit-frame-pointer -D_GNU_SOURCE=1
-LDFLAGS=
-BLOCKS=-L./blocksruntime/ -lBlocksRuntime
+.PHONY: clean
 
-%.o: %.c
+C_SOURCES := $(wildcard src/*.c)
+OBJECTS := $(addprefix obj/,$(notdir $(C_SOURCES:.c=.o)))
+CFLAGS := -O1 -g -Werror -Wall -std=gnu11 -fsanitize=address -fblocks -I./deps/blocksruntime/BlocksRuntime/ \
+	-fno-omit-frame-pointer -D_GNU_SOURCE=1
+LDFLAGS :=
+BLOCKS := -L./deps/blocksruntime/ -lBlocksRuntime
+
+obj/%.o: src/%.c
 	clang ${CFLAGS} -c -o $@ $<
 
-mksc: mks_node.o main.o
-	clang ${CFLAGS} ${LDFLAGS} -o $@ mks_node.o main.o ${BLOCKS}
+mksc: $(OBJECTS)
+	clang ${CFLAGS} ${LDFLAGS} -o $@ $(OBJECTS) ${BLOCKS}
 
 clean:
-	rm -v *.o
+	rm -v obj/*.o
 	rm mksc
