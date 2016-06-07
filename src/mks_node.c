@@ -191,6 +191,14 @@ mks_node_t *mk_divide_operator(mks_node_t *left, mks_node_t *right) {
   return node;
 }
 
+mks_node_t *mk_empty() {
+  mks_node_t *node = mk_node(DIVIDE_OP);
+
+  node->empty = 0;
+
+  return node;
+}
+
 void mks_free(mks_node_t *node) {
   if (node == NULL)
     return;
@@ -290,6 +298,8 @@ void mks_free(mks_node_t *node) {
     free(node->divide_op);
     free(node);
     return;
+  case EMPTY:
+    free(node);
   }
 }
 
@@ -415,6 +425,10 @@ char *pretty_print_node(mks_node_t *node) {
     asprintf(&bfr, "<mk_divide_op_t: left=%s, right=%s>", left, right);
     free(left);
     free(right);
+    return bfr;
+  }
+  case EMPTY: {
+    asprintf(&bfr, "<mk_empty_t>");
     return bfr;
   }
   }

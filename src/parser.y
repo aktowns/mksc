@@ -2,6 +2,7 @@
 {
     #include <stdio.h>
     #include <assert.h>
+    #include <mks_node.h>
 }
 
 %syntax_error
@@ -9,39 +10,43 @@
     printf("Error parsing command\n");
 }
 
-%token_type { const char* }
+%token_type { mks_node_t * }
 
-start ::= stmtseq.
+start ::= stmtseq(A). { pretty_print_node(A); }
 
-statement ::= designator ASSIGN expression.
+statement(A) ::= designator(B) ASSIGN expression(C).
+{ A = mk_assignment(B, C); }
 statement ::= PRINT expression.
-statement ::= IF expression THEN stmtseq ELSE stmtseq FI.
-statement ::= IF expression THEN stmtseq FI.
-statement ::= WHILE expression DO stmtseq OD .
+statement(A) ::= IF expression(B) THEN stmtseq(C) ELSE stmtseq(D) FI.
+{ A = mk_if_stmt(B, C, D); }
+statement(A) ::= IF expression(B) THEN stmtseq(C) FI.
+{ A = mk_if_stmt(B, C, mk_empty()); }
+statement(A) ::= WHILE expression(B) DO stmtseq(C) OD.
+{ A = mk_while_stmt(B, C); }
 
-stmtseq ::= stmtseq SEMICOLON statement.
-stmtseq ::= statement.
+stmtseq(A) ::= stmtseq(B) SEMICOLON statement(C). { A = mk_sequence(B, C); }
+stmtseq(A) ::= statement(B). { A = B; }
 
-expression ::= expr2.
-expression ::= expr2 EQ expr2.
-expression ::= expr2 NE expr2.
-expression ::= expr2 LT expr2.
-expression ::= expr2 LE expr2.
-expression ::= expr2 GT expr2.
-expression ::= expr2 GE expr2.
+expression(A) ::= expr2(B). { A = B; }
+expression(A) ::= expr2(B) EQ expr2(C). { A = mk_eq_op(B, C); }
+expression(A) ::= expr2(B) NE expr2(C). { A = mk_ne_op(B, C); }
+expression(A) ::= expr2(B) LT expr2(C). { A = mk_lt_op(B, C); }
+expression(A) ::= expr2(B) LE expr2(C). { A = mk_le_op(B, C); }
+expression(A) ::= expr2(B) GT expr2(C). { A = mk_gt_op(B, C); }
+expression(A) ::= expr2(B) GE expr2(C). { A = mk_ge_op(B, C); }
 
-expr2 ::= expr3.
-expr2 ::= expr2 PLUS expr3.
-expr2 ::= expr2 MINUS expr3.
+expr2(A) ::= expr3(B). { A = B; }
+expr2(A) ::= expr2(B) PLUS expr3(C). { A = mk_plus_op(B, C); }
+expr2(A) ::= expr2(B) MINUS expr3(C). { A = mk_minus_op(B, C); }
 
-expr3 ::= expr4.
-expr3 ::= expr3 MULT expr4.
-expr3 ::= expr3 DIVIDE expr4.
+expr3(A) ::= expr4(B). { A = B; }
+expr3(A) ::= expr3(B) MULT expr4(C). { A = mk_mult_op(B, C); }
+expr3(A) ::= expr3(B) DIVIDE expr4(C). { A = mk_divide_op(B, C); }
 
-expr4 ::= PLUS expr4.
+expr4(A) ::= PLUS expr4(B). { A = B; }
 expr4 ::= MINUS expr4.
-expr4 ::= LPAREN expression RPAREN.
-expr4 ::= NUMBER.
-expr4 ::= designator.
+expr4(A) ::= LPAREN expression(B) RPAREN. { A = B; }
+expr4(A) ::= NUMBER. { A = mk_number(10); }
+expr4(A) ::= designator(B). { A = B; }
 
-designator ::= NAME.
+designator(A) ::= NAME. { A = mk_identifier("Hello World"); }

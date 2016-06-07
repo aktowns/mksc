@@ -1,5 +1,5 @@
 .PHONY: clean
-.DEFAULT_GOAL := mksc
+.DEFAULT_GOAL := all
 
 CC=clang
 C_SOURCES := $(wildcard src/*.c) src/gen/parser.c src/gen/lexer.c
@@ -27,8 +27,20 @@ src/gen/parser.c: deps/lemon src/parser.y
 	deps/lemon -Tdeps/lempar.c.tmpl src/parser.y
 	mv -v src/parser.{h,c,out} src/gen/
 
+all: pre-build mksc post-build
+
 mksc: $(OBJECTS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJECTS) $(BLOCKS)
+
+pre-build:
+	# grrr lemon.
+	rm -f src/gen/*
+	rm -f src/parser.{h,c,out}
+
+post-build:
+	# grrr lemon.
+	rm -f src/gen/*
+	rm -f src/parser.{h,c,out}
 
 make_vim_happy:
 	make clean

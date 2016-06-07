@@ -19,7 +19,8 @@ typedef enum {
   PLUS_OP,
   MINUS_OP,
   MULT_OP,
-  DIVIDE_OP
+  DIVIDE_OP,
+  EMPTY
 } mks_node_type;
 
 typedef struct { char *value; } mks_identifier_t;
@@ -97,6 +98,8 @@ typedef struct {
   struct mks_node *right;
 } mks_divide_operator_t;
 
+typedef int mks_empty_t;
+
 struct mks_node {
   mks_node_type tag;
 
@@ -117,6 +120,7 @@ struct mks_node {
     mks_minus_operator_t *minus_op;
     mks_mult_operator_t *mult_op;
     mks_divide_operator_t *divide_op;
+    mks_empty_t empty;
   };
 };
 
@@ -127,7 +131,7 @@ mks_node_t *mk_number(int value);
 mks_node_t *mk_sequence(mks_node_t *left, mks_node_t *right);
 mks_node_t *mk_assignment(mks_node_t *name, mks_node_t *value);
 mks_node_t *mk_if_stmt(mks_node_t *condition, mks_node_t *true_body, mks_node_t *false_body);
-mks_node_t *mk_while_smtt(mks_node_t *condition, mks_node_t *body);
+mks_node_t *mk_while_stmt(mks_node_t *condition, mks_node_t *body);
 mks_node_t *mk_eq_op(mks_node_t *left, mks_node_t *right);
 mks_node_t *mk_ne_op(mks_node_t *left, mks_node_t *right);
 mks_node_t *mk_lt_op(mks_node_t *left, mks_node_t *right);
@@ -138,6 +142,7 @@ mks_node_t *mk_plus_op(mks_node_t *left, mks_node_t *right);
 mks_node_t *mk_minus_op(mks_node_t *left, mks_node_t *right);
 mks_node_t *mk_mult_op(mks_node_t *left, mks_node_t *right);
 mks_node_t *mk_divide_op(mks_node_t *left, mks_node_t *right);
+mks_node_t *mk_empty();
 
 void mks_free(mks_node_t *node);
 char *pretty_print_node(mks_node_t *node);
