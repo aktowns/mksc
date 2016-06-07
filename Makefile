@@ -3,7 +3,7 @@
 
 CC=clang
 C_SOURCES := $(wildcard src/*.c) src/gen/parser.c src/gen/lexer.c
-OBJECTS := $(addprefix obj/,$(notdir $(C_SOURCES:.c=.o))) obj/lexer.o obj/parser.o
+OBJECTS := $(addprefix obj/,$(notdir $(C_SOURCES:.c=.o)))
 CFLAGS := -O1 -g -Werror -Wall -std=gnu11 -fsanitize=address -fblocks -I./deps/blocksruntime/BlocksRuntime/ \
 	-fno-omit-frame-pointer -D_GNU_SOURCE=1 -I./include
 LDFLAGS := -lfl
@@ -15,13 +15,17 @@ obj/%.o: src/%.c
 obj/%.o: src/gen/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-src/gen/lexer.c: src/mks.l
-	mkdir -p $(dir $@)
-	flex $<
+deps/lemon: deps/lemon.c
+	$(CC) -o deps/lemon $<
 
-src/gen/parser.c: src/mks.y src/gen/lexer.c
+src/gen/lexer.c: src/lexer.rl src/gen/parser.c
 	mkdir -p $(dir $@)
-	bison --graph=$(basename $@).dot $<
+	ragel -o $@ $<
+
+src/gen/parser.c: deps/lemon src/parser.y
+	mkdir -p $(dir $@)
+	deps/lemon -Tdeps/lempar.c.tmpl src/parser.y
+	mv -v src/parser.{h,c,out} src/gen/
 
 mksc: $(OBJECTS)
 	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(OBJECTS) $(BLOCKS)
