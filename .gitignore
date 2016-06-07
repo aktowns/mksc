@@ -36,4 +36,7 @@
 tags
 
 # Project stuff
+.clang
 mksc
+src/gen
+deps/lemon
