@@ -303,7 +303,7 @@ void mks_free(mks_node_t *node) {
   }
 }
 
-char *pretty_print_node(mks_node_t *node) {
+char *pretty_stringify_node(mks_node_t *node) {
   char *bfr = NULL;
 
   switch (node->tag) {
@@ -314,25 +314,25 @@ char *pretty_print_node(mks_node_t *node) {
     asprintf(&bfr, "<mks_number_t: value=%i", node->number->value);
     return bfr;
   case SEQUENCE: {
-    char *left = pretty_print_node(node->sequence->left);
-    char *right = pretty_print_node(node->sequence->right);
+    char *left = pretty_stringify_node(node->sequence->left);
+    char *right = pretty_stringify_node(node->sequence->right);
     asprintf(&bfr, "<mks_sequence_t: left=%s, right=%s>", left, right);
     free(left);
     free(right);
     return bfr;
   }
   case ASSIGNMENT: {
-    char *name = pretty_print_node(node->assignment->identifier);
-    char *value = pretty_print_node(node->assignment->value);
+    char *name = pretty_stringify_node(node->assignment->identifier);
+    char *value = pretty_stringify_node(node->assignment->value);
     asprintf(&bfr, "<mks_assignment_t: name=%s, value=%s>", name, value);
     free(name);
     free(value);
     return bfr;
   }
   case IF_STMT: {
-    char *condition = pretty_print_node(node->if_stmt->condition);
-    char *true_body = pretty_print_node(node->if_stmt->true_body);
-    char *false_body = pretty_print_node(node->if_stmt->false_body);
+    char *condition = pretty_stringify_node(node->if_stmt->condition);
+    char *true_body = pretty_stringify_node(node->if_stmt->true_body);
+    char *false_body = pretty_stringify_node(node->if_stmt->false_body);
     asprintf(&bfr, "<mks_if_smtmt_t: condition=%s, true_body=%s, false_body=%s>", condition, true_body, false_body);
     free(condition);
     free(true_body);
@@ -340,88 +340,88 @@ char *pretty_print_node(mks_node_t *node) {
     return bfr;
   }
   case WHILE_STMT: {
-    char *condition = pretty_print_node(node->while_stmt->condition);
-    char *body = pretty_print_node(node->while_stmt->body);
+    char *condition = pretty_stringify_node(node->while_stmt->condition);
+    char *body = pretty_stringify_node(node->while_stmt->body);
     asprintf(&bfr, "<mk_while_stmt_t: condition=%s, body=%s>", condition, body);
     free(condition);
     free(body);
     return bfr;
   }
   case EQ_OP: {
-    char *left = pretty_print_node(node->eq_op->left);
-    char *right = pretty_print_node(node->eq_op->right);
+    char *left = pretty_stringify_node(node->eq_op->left);
+    char *right = pretty_stringify_node(node->eq_op->right);
     asprintf(&bfr, "<mk_eq_op_t: left=%s, right=%s>", left, right);
     free(left);
     free(right);
     return bfr;
   }
   case NE_OP: {
-    char *left = pretty_print_node(node->eq_op->left);
-    char *right = pretty_print_node(node->eq_op->right);
+    char *left = pretty_stringify_node(node->eq_op->left);
+    char *right = pretty_stringify_node(node->eq_op->right);
     asprintf(&bfr, "<mk_ne_op_t: left=%s, right=%s>", left, right);
     free(left);
     free(right);
     return bfr;
   }
   case LE_OP: {
-    char *left = pretty_print_node(node->le_op->left);
-    char *right = pretty_print_node(node->le_op->right);
+    char *left = pretty_stringify_node(node->le_op->left);
+    char *right = pretty_stringify_node(node->le_op->right);
     asprintf(&bfr, "<mk_le_op_t: left=%s, right=%s>", left, right);
     free(left);
     free(right);
     return bfr;
   }
   case GE_OP: {
-    char *left = pretty_print_node(node->ge_op->left);
-    char *right = pretty_print_node(node->ge_op->right);
+    char *left = pretty_stringify_node(node->ge_op->left);
+    char *right = pretty_stringify_node(node->ge_op->right);
     asprintf(&bfr, "<mk_ge_op_t: left=%s, right=%s>", left, right);
     free(left);
     free(right);
     return bfr;
   }
   case LT_OP: {
-    char *left = pretty_print_node(node->lt_op->left);
-    char *right = pretty_print_node(node->lt_op->right);
+    char *left = pretty_stringify_node(node->lt_op->left);
+    char *right = pretty_stringify_node(node->lt_op->right);
     asprintf(&bfr, "<mk_lt_op_t: left=%s, right=%s>", left, right);
     free(left);
     free(right);
     return bfr;
   }
   case GT_OP: {
-    char *left = pretty_print_node(node->gt_op->left);
-    char *right = pretty_print_node(node->gt_op->right);
+    char *left = pretty_stringify_node(node->gt_op->left);
+    char *right = pretty_stringify_node(node->gt_op->right);
     asprintf(&bfr, "<mk_gt_op_t: left=%s, right=%s>", left, right);
     free(left);
     free(right);
     return bfr;
   }
   case PLUS_OP: {
-    char *left = pretty_print_node(node->plus_op->left);
-    char *right = pretty_print_node(node->plus_op->right);
+    char *left = pretty_stringify_node(node->plus_op->left);
+    char *right = pretty_stringify_node(node->plus_op->right);
     asprintf(&bfr, "<mk_plus_op_t: left=%s, right=%s>", left, right);
     free(left);
     free(right);
     return bfr;
   }
   case MINUS_OP: {
-    char *left = pretty_print_node(node->minus_op->left);
-    char *right = pretty_print_node(node->minus_op->right);
+    char *left = pretty_stringify_node(node->minus_op->left);
+    char *right = pretty_stringify_node(node->minus_op->right);
     asprintf(&bfr, "<mk_minus_op_t: left=%s, right=%s>", left, right);
     free(left);
     free(right);
     return bfr;
   }
   case MULT_OP: {
-    char *left = pretty_print_node(node->mult_op->left);
-    char *right = pretty_print_node(node->mult_op->right);
+    char *left = pretty_stringify_node(node->mult_op->left);
+    char *right = pretty_stringify_node(node->mult_op->right);
     asprintf(&bfr, "<mk_mult_op_t: left=%s, right=%s>", left, right);
     free(left);
     free(right);
     return bfr;
   }
   case DIVIDE_OP: {
-    char *left = pretty_print_node(node->divide_op->left);
-    char *right = pretty_print_node(node->divide_op->right);
+    char *left = pretty_stringify_node(node->divide_op->left);
+    char *right = pretty_stringify_node(node->divide_op->right);
     asprintf(&bfr, "<mk_divide_op_t: left=%s, right=%s>", left, right);
     free(left);
     free(right);
@@ -435,4 +435,10 @@ char *pretty_print_node(mks_node_t *node) {
 
   free(bfr);
   return "Unknown node type";
+}
+
+void pretty_print_node(mks_node_t *node) {
+  char *seq_str = pretty_stringify_node(node);
+  puts(seq_str);
+  free(seq_str);
 }

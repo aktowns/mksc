@@ -57,7 +57,19 @@
 
 }%%
 
+#pragma clang diagnostic push
+#if defined(__has_warning) && __has_warning("-Wunused-const-variable")
+#pragma clang diagnostic ignored "-Wunused-const-variable"
+#endif
 %% write data nofinal;
+#pragma clang diagnostic pop
+
+token_t* mk_token(type) {
+  token_t* tok = malloc(sizeof(token_t));
+  tok->type = type;
+  tok->next = NULL;
+  return tok;
+}
 
 #define TOKEN(t) \
   token_t* tok = mk_token(t); \
@@ -69,20 +81,14 @@
     cur_token = tok; \
   }
 
-token_t* mk_token(type) {
-  token_t* tok = malloc(sizeof(token_t));
-  tok->type = type;
-  tok->next = NULL;
-  return tok;
-}
-
 token_t* lex(char* bfr) {
   // int curline = 1;
-  const char *p = bfr;
-  const char *pe = p + strlen(p) + 1;
-  const char *eof = pe;
+  int len = strlen(bfr);
+  char *p = bfr;
+  char *pe = p + len;
+  char *eof = pe;
   int cs = 0, act = 0;
-  const char *ts, *te;
+  char *ts, *te;
   %%write init;
 
   token_t *tokens = NULL;
@@ -93,77 +99,19 @@ token_t* lex(char* bfr) {
   return tokens;
 }
 
-void *ParseAlloc(void *);
-void Parse(void *, int, void*, void*);
-void ParseFree(void *, void *);
-
-char* read_file(char* path) {
-  FILE *f = fopen(path, "rb");
-  if (!f) {
-    printf("failed to read file\n");
-    abort();
+void token_free(token_t *token) {
+  switch(token->type) {
+    case NAME:
+      free(token->string_value);
+      break;
   }
-
-  fseek(f, 0, SEEK_END);
-  int length = ftell(f);
-  fseek(f, 0, SEEK_SET);
-  char *buffer = malloc(length);
-  if (!buffer) {
-    printf("failed to allocate space for the file");
-    abort();
-  }
-  fread(buffer, 1, length, f);
-  fclose(f);
-
-  return buffer;
+  free(token);
 }
 
-const char* print_token(token_t* token) {
-  switch (token->type) {
-    case NUMBER: return "NUMBER";
-    case PLUS: return "PLUS";
-    case SEMICOLON: return "SEMICOLON";
-    case ASSIGN: return "ASSIGN";
-    case LPAREN: return "LPAREN";
-    case RPAREN: return "RPAREN";
-    case NAME: return "NAME";
-    case EQ: return "EQ";
-    case IF: return "IF";
-    case ELSE: return "ELSE";
-    case THEN: return "THEN";
-    case FI: return "FI";
-    default:
-      printf("Unknown token type: %i\n", token->type);
-      return "unknown";
+void lex_free(token_t* tokens) {
+  token_t* curr;
+  while ((curr = tokens) != NULL) {
+    tokens = tokens->next;
+    token_free(curr);
   }
-}
-
-void print_tokens(token_t* tokens) {
-  printf("TOKEN_TREE: ");
-  do {
-    printf("-> %s ", print_token(tokens));
-  } while ((tokens = tokens->next) != NULL);
-  printf("\n");
-}
-
-int main(int argc, char** argv) {
-  printf("%i, %i\n", mks_lexer_error, mks_lexer_en_main);
-
-  char* contents = read_file(argv[1]);
-  printf("read file: %s\n", contents);
-  token_t *tokens = lex(contents);
-  token_t *cur_token = tokens;
-  print_tokens(tokens);
-
-  void* parser = ParseAlloc((void*)malloc);
-
-  do {
-    Parse(parser, cur_token->type, cur_token, NULL);
-  } while ((cur_token = cur_token->next) != NULL);
-
-  Parse(parser, 0, NULL, NULL);
-
-  ParseFree(parser, (void*)free);
-
-  return 0;
 }

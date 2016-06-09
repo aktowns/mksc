@@ -145,6 +145,7 @@ mks_node_t *mk_divide_operator(mks_node_t *left, mks_node_t *right);
 mks_node_t *mk_empty();
 
 void mks_free(mks_node_t *node);
-char *pretty_print_node(mks_node_t *node);
+char *pretty_stringify_node(mks_node_t *node);
+void pretty_print_node(mks_node_t *node);
 
 #endif

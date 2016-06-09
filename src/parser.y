@@ -5,6 +5,8 @@
     #include <assert.h>
     #include <mks_node.h>
     #include <token.h>
+
+    #pragma clang diagnostic ignored "-Wunused-variable"
 }
 
 %syntax_error {
@@ -21,19 +23,23 @@
 
 %token_type { token_t * }
 %default_type { mks_node_t * }
+%type start { mks_node_t * }
+%extra_argument { mks_node_t **result }
+%start_symbol start
 
+%destructor expression { mks_free($$); }
+%destructor statement { mks_free($$); }
+%destructor stmtseq { mks_free($$); }
+%destructor expr2 { mks_free($$); }
+%destructor designator { mks_free($$); }
 %left PLUS MINUS.
 %left DIVIDE TIMES.
 
-start ::= stmtseq(A). {
-      char* str = pretty_print_node(A);
-      printf("program tree: %s\n", str);
-      free(str);
-}
+start ::= stmtseq(B). { *result = B; }
 
 statement(A) ::= designator(B) ASSIGN expression(C).
 { A = mk_assignment(B, C); }
-statement ::= PRINT expression.
+statement(A) ::= PRINT expression(B). { A = B; }
 statement(A) ::= IF expression(B) THEN stmtseq(C) ELSE stmtseq(D) FI.
 { A = mk_if_stmt(B, C, D); }
 statement(A) ::= IF expression(B) THEN stmtseq(C) FI.
@@ -61,7 +67,7 @@ expr3(A) ::= expr3(B) MULT expr4(C). { A = mk_mult_operator(B, C); }
 expr3(A) ::= expr3(B) DIVIDE expr4(C). { A = mk_divide_operator(B, C); }
 
 expr4(A) ::= PLUS expr4(B). { A = B; }
-expr4 ::= MINUS expr4.
+expr4(A) ::= MINUS expr4(B). { A = B; }
 expr4(A) ::= LPAREN expression(B) RPAREN. { A = B; }
 expr4(A) ::= NUMBER(B). { A = mk_number(B->number_value); }
 expr4(A) ::= designator(B). { A = B; }

@@ -6,7 +6,7 @@ char *string_substr(char *src, int start, int end) {
   if (strlen(src) < (end-start)) abort();
   int str_len = end-start;
 
-  char *new_str = malloc(str_len+1);
+  char *new_str = malloc(str_len + 1);
   strncpy(new_str, &src[start], str_len);
   new_str[str_len] = '\0';
 
