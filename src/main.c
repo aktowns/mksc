@@ -20,7 +20,7 @@ int main(void) {
   // printf("identifier=%s, number=%s\n", id_str, num_str);
   // free(id_str);
   // free(num_str);
-
+  
   free(seq_str);
 
   mks_free(seq); // free's children
