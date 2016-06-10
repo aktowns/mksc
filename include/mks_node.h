@@ -7,7 +7,9 @@ struct mks_node;
 
 typedef enum {
     MODULE,
+    IMPORT,
     FUNCTION_CALL,
+    FUNCTION,
     IDENTIFIER,
     NUMBER_LITERAL,
     STRING_LITERAL,
@@ -24,7 +26,7 @@ typedef enum {
     MINUS_OP,
     MULT_OP,
     DIVIDE_OP,
-    ERROR
+    EMPTY
 } mks_node_type;
 
 typedef struct {
@@ -115,6 +117,17 @@ typedef struct {
     struct mks_node *arguments;
 } mks_function_call_t;
 
+typedef struct {
+    struct mks_node *arguments;
+    struct mks_node *body;
+} mks_function_t;
+
+typedef struct {
+    struct mks_node *name;
+    struct mks_node *qualified;
+    struct mks_node *specific;
+} mks_import_t;
+
 struct mks_node {
     mks_node_type tag;
     bool is_ok;
@@ -138,6 +151,8 @@ struct mks_node {
         mks_divide_operator_t *divide_op;
         mks_module_t *module;
         mks_function_call_t *function_call;
+        mks_function_t *function;
+        mks_import_t *import;
         char* error;
     };
 };
@@ -146,9 +161,15 @@ typedef struct mks_node mks_node_t;
 
 mks_node_t *mk_node(mks_node_type tag);
 
+mks_node_t *mk_copy(mks_node_t* src);
+
 mks_node_t *mk_module(mks_node_t *identifier, mks_node_t *body);
 
+mks_node_t *mk_import(mks_node_t *name, mks_node_t *qualified, mks_node_t *specific);
+
 mks_node_t *mk_function_call(mks_node_t *name, mks_node_t *args);
+
+mks_node_t *mk_function(mks_node_t *args, mks_node_t *body);
 
 mks_node_t *mk_identifier(char *value);
 

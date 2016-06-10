@@ -1,0 +1,10 @@
+module Tests.Parsing.Test7 is
+
+import System;
+import System.Testing;
+
+import System.Net as Net;
+
+import Awesome.Cool(yeah, yeah);
+
+import Yeah.Okay(woo, waa) as Hehe;

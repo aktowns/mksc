@@ -38,7 +38,9 @@
         ','              => { TOKEN(TOKEN_COMMA); };
 
         'module'         => { TOKEN(TOKEN_MODULE); };
+        'import'         => { TOKEN(TOKEN_IMPORT); };
         'is'             => { TOKEN(TOKEN_IS); };
+        'as'             => { TOKEN(TOKEN_AS); };
         'let'            => { TOKEN(TOKEN_LET); };
         'if'             => { TOKEN(TOKEN_IF); };
         'then'           => { TOKEN(TOKEN_THEN); };

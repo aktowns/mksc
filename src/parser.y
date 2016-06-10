@@ -60,6 +60,17 @@ toplevelseq(A) ::= statement(B). { A = B; }
 
 statement(A) ::= LET identifier(B) ASSIGN expression(C). { A = mk_assignment(B, C); }
 statement(A) ::= LET identifier(B) ASSIGN DO bodyseq(C) SEPERATOR OD. { A = mk_assignment(B, C); }
+statement(A) ::= LET identifier(B) LPAREN arglist(C) RPAREN ASSIGN expression(D).
+{ A = mk_assignment(B, mk_function(C, D)); }
+statement(A) ::= LET identifier(B) LPAREN arglist(C) RPAREN ASSIGN DO bodyseq(D) SEPERATOR OD.
+{ A = mk_assignment(B, mk_function(C, D)); }
+
+statement(A) ::= IMPORT special_identifier(B). { A = mk_import(B, mk_node(EMPTY), mk_node(EMPTY)); }
+statement(A) ::= IMPORT special_identifier(B) LPAREN arglist(C) RPAREN. { A = mk_import(B, mk_node(EMPTY), C); }
+
+statement(A) ::= IMPORT special_identifier(B) AS special_identifier(C). { A = mk_import(B, C, mk_node(EMPTY)); }
+statement(A) ::= IMPORT special_identifier(B) LPAREN arglist(D) RPAREN AS special_identifier(C).
+{ A = mk_import(B, C, D); }
 
 body(A) ::= statement(B). { A = B; }
 body(A) ::= expression(B). { A = B; }

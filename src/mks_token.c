@@ -45,8 +45,12 @@ const char *string_token(token_t *token) {
     switch (token->type) {
         case TOKEN_MODULE:
             return "MODULE";
+        case TOKEN_IMPORT:
+            return "IMPORT";
         case TOKEN_IS:
             return "IS";
+        case TOKEN_AS:
+            return "AS";
         case TOKEN_LET:
             return "LET";
         case TOKEN_NUMBER_LITERAL:

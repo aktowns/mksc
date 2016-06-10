@@ -34,7 +34,9 @@ set(SYNTAX_TEST_FILES
         tests/parsing/02-test-assign.syntax
         tests/parsing/03-test-if-else-branch.syntax
         tests/parsing/04-test-do-block.syntax
-        tests/parsing/05-test-function-call.syntax)
+        tests/parsing/05-test-function-call.syntax
+        tests/parsing/06-test-function-declaration.syntax
+        tests/parsing/07-test-import-statement.syntax)
 
 set(SOURCE_FILES
         src/main.c
@@ -58,11 +60,7 @@ set(SOURCE_FILES
         include/utils/memory_utils.h
         include/utils/string_utils.h
 
-        tests/parsing/01-test-expression.syntax
-        tests/parsing/02-test-assign.syntax
-        tests/parsing/03-test-if-else-branch.syntax
-        tests/parsing/04-test-do-block.syntax
-        tests/parsing/05-test-function-call.syntax)
+        ${SYNTAX_TEST_FILES})
 
 add_executable(mksc ${SOURCE_FILES})
 

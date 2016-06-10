@@ -1,0 +1,9 @@
+module Tests.Parsing.Test6 is
+
+let add (x, y) = x + y;
+
+let add3 (x, y, z) = x + y + z;
+
+let do_something (yeah) = do
+    print(yeah);
+od;

@@ -38,13 +38,36 @@ mks_node_t *mk_module(mks_node_t *identifier,  mks_node_t *body) {
     return node;
 }
 
+mks_node_t *mk_import(mks_node_t *name, mks_node_t *qualified, mks_node_t *specific) {
+    mks_node_t *node = mk_node(IMPORT);
+    mks_import_t *imp_node = malloc(sizeof(mks_import_t));
+
+    imp_node->name = name;
+    imp_node->qualified = qualified;
+    imp_node->specific = specific;
+    node->import = imp_node;
+
+    return node;
+}
+
 mks_node_t *mk_function_call(mks_node_t *name, mks_node_t *args) {
     mks_node_t *node = mk_node(FUNCTION_CALL);
-    mks_function_call_t *func_call = malloc(sizeof(mks_module_t));
+    mks_function_call_t *func_call = malloc(sizeof(mks_function_call_t));
 
     func_call->name = name;
     func_call->arguments = args;
     node->function_call = func_call;
+
+    return node;
+}
+
+mks_node_t *mk_function(mks_node_t *args, mks_node_t *body) {
+    mks_node_t *node = mk_node(FUNCTION);
+    mks_function_t *func = malloc(sizeof(mks_function_t));
+
+    func->arguments = args;
+    func->body = body;
+    node->function = func;
 
     return node;
 }
@@ -227,6 +250,13 @@ void mks_free(mks_node_t *node) {
             free(node->module);
             free(node);
             return;
+        case IMPORT:
+            mks_free(node->import->name);
+            mks_free(node->import->qualified);
+            mks_free(node->import->specific);
+            free(node->import);
+            free(node);
+            return;
         case IDENTIFIER:
             free(node->identifier->value);
             free(node->identifier);
@@ -240,6 +270,12 @@ void mks_free(mks_node_t *node) {
             mks_free(node->function_call->name);
             mks_free(node->function_call->arguments);
             free(node->function_call);
+            free(node);
+            return;
+        case FUNCTION:
+            mks_free(node->function->arguments);
+            mks_free(node->function->body);
+            free(node->function);
             free(node);
             return;
         case STRING_LITERAL:
@@ -326,14 +362,37 @@ void mks_free(mks_node_t *node) {
             free(node->divide_op);
             free(node);
             return;
-        case ERROR: {
-            if (node->error != NULL) {
-                free(node->error);
-            }
+        case EMPTY:
             free(node);
-        }
+            return;
     }
 }
+
+mks_node_t *mk_copy(mks_node_t* src) {
+    mks_node_t *newnode = mk_node(src->tag);
+
+    switch (src->tag) {
+        case IDENTIFIER: {
+            mks_identifier_t *id_node = malloc(sizeof(mks_identifier_t));
+            id_node->value = strdup(src->identifier->value);
+            newnode->identifier = id_node;
+            break;
+        }
+        case IMPORT: {
+            mks_import_t *imp_node = malloc(sizeof(mks_import_t));
+            imp_node->qualified = mk_copy(src->import->qualified);
+            imp_node->name = mk_copy(src->import->name);
+            newnode->import = imp_node;
+            break;
+        }
+        default:
+            printf("unhandled: %s\n", pretty_stringify_node(src));
+            ASSERT(false, "unhandled copy for node");
+    }
+
+    return newnode;
+}
+
 
 char *pretty_stringify_node(mks_node_t *node) {
     ASSERT(node != NULL, "handed a null node!");
@@ -349,6 +408,16 @@ char *pretty_stringify_node(mks_node_t *node) {
             free(body);
             return bfr;
         }
+        case IMPORT: {
+            char *name = pretty_stringify_node(node->import->name);
+            char *qual = pretty_stringify_node(node->import->qualified);
+            char *specific = pretty_stringify_node(node->import->specific);
+            asprintf(&bfr, "<mks_import_t: name=%s qualified=%s specific=%s>", name, qual, specific);
+            free(name);
+            free(qual);
+            free(specific);
+            return bfr;
+        }
         case IDENTIFIER:
             asprintf(&bfr, "<mks_identifier_t: value=%s>", node->identifier->value);
             return bfr;
@@ -357,6 +426,14 @@ char *pretty_stringify_node(mks_node_t *node) {
             char *args = pretty_stringify_node(node->function_call->arguments);
             asprintf(&bfr, "<mks_function_call_t: name=%s args=%s>", name, args);
             free(name);
+            free(args);
+            return bfr;
+        }
+        case FUNCTION: {
+            char *args = pretty_stringify_node(node->function->arguments);
+            char *body = pretty_stringify_node(node->function->body);
+            asprintf(&bfr, "<mks_function_t: args=%s body=%s>", args, body);
+            free(body);
             free(args);
             return bfr;
         }
@@ -473,8 +550,8 @@ char *pretty_stringify_node(mks_node_t *node) {
             free(right);
             return bfr;
         }
-        case ERROR: {
-            asprintf(&bfr, "<mk_error_t value=%s>", node->error);
+        case EMPTY: {
+            asprintf(&bfr, "<mk_empty>");
             return bfr;
         }
     }
