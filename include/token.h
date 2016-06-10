@@ -3,6 +3,10 @@
 
 typedef struct node {
   int type;
+
+  int line_no;
+  int column_no;
+
   union {
     long int number_value;
     char* string_value;

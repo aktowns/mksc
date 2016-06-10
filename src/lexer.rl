@@ -9,7 +9,8 @@
 %%{
   machine mks_lexer;
 
-#	newline = '\n' @{curline += 1;};
+  newline = '\n' @{ ++line_counter; line_position = (intptr_t)p; };
+	c_comment := any* :>> '*)' @{ fgoto main; };
 
   number = ('+'|'-')?[0-9]+;
   alpha_u = alpha | '_';
@@ -36,23 +37,27 @@
     '-'              => { TOKEN(MINUS); };
     '*'              => { TOKEN(MULT); };
     '/'              => { TOKEN(DIVIDE); };
-    "if"             => { TOKEN(IF); };
+    'if'             => { TOKEN(IF); };
     "then"           => { TOKEN(THEN); };
     "else"           => { TOKEN(ELSE); };
     "fi"             => { TOKEN(FI); };
     "do"             => { TOKEN(DO); };
     "od"             => { TOKEN(OD); };
-    "while"          => { TOKEN(WHILE); };
     '('              => { TOKEN(LPAREN); };
     ')'              => { TOKEN(RPAREN); };
     alpha_u alpha_u* => {
       char* dupd = strdup(ts);
       char* substr = string_trimend(dupd, te-ts);
       free(dupd);
-      TOKEN(NAME);
+      TOKEN(IDENTIFIER);
       cur_token->string_value = substr;
     };
-    space;
+
+    # Comments and whitespace.
+	  '(*' { fgoto c_comment; };
+	  '--' [^\n]* '\n';
+    ( any - 33..126 )+;
+    newline;
   *|;
 
 }%%
@@ -64,15 +69,18 @@
 %% write data nofinal;
 #pragma clang diagnostic pop
 
-token_t* mk_token(type) {
+token_t* mk_token(int type, int line, int col) {
   token_t* tok = malloc(sizeof(token_t));
   tok->type = type;
+  tok->line_no = line;
+  tok->column_no = col;
   tok->next = NULL;
+
   return tok;
 }
 
 #define TOKEN(t) \
-  token_t* tok = mk_token(t); \
+  token_t* tok = mk_token(t, line_counter, (intptr_t)(ts - line_position) + 1); \
   if (cur_token != NULL) { \
     cur_token->next = tok; \
     cur_token = cur_token->next; \
@@ -82,7 +90,8 @@ token_t* mk_token(type) {
   }
 
 token_t* lex(char* bfr) {
-  // int curline = 1;
+  int line_counter = 1;
+  intptr_t line_position = (intptr_t)bfr;
   int len = strlen(bfr);
   char *p = bfr;
   char *pe = p + len;
@@ -101,7 +110,7 @@ token_t* lex(char* bfr) {
 
 void token_free(token_t *token) {
   switch(token->type) {
-    case NAME:
+    case IDENTIFIER:
       free(token->string_value);
       break;
   }

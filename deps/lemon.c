@@ -1504,6 +1504,16 @@ static void handle_T_option(char *z){
   lemon_strcpy(user_templatename, z);
 }
 
+static char *user_output_directory = NULL;
+
+static void handle_o_option(char *z){
+  user_output_directory = (char *) malloc( lemonStrlen(z)+1 );
+  if( user_output_directory==0 ){
+    memory_error();
+  }
+  lemon_strcpy(user_output_directory, z);
+}
+
 /* Merge together to lists of rules ordered by rule.iRule */
 static struct rule *Rule_merge(struct rule *pA, struct rule *pB){
   struct rule *pFirst = 0;
@@ -1586,6 +1596,7 @@ int main(int argc, char **argv)
     {OPT_FLAG, "m", (char*)&mhflag, "Output a makeheaders compatible file."},
     {OPT_FLAG, "l", (char*)&nolinenosflag, "Do not print #line statements."},
     {OPT_FSTR, "O", 0, "Ignored.  (Placeholder for '-O' compiler options.)"},
+    {OPT_FSTR, "o", (char*)handle_o_option, "Specify an output directory"},
     {OPT_FLAG, "p", (char*)&showPrecedenceConflict,
                     "Show conflicts resolved by precedence rules"},
     {OPT_FLAG, "q", (char*)&quiet, "(Quiet) Don't print the report file."},
@@ -2949,6 +2960,19 @@ void Plink_delete(struct plink *plp)
     plp = nextpl;
   }
 }
+
+char *basename(char* name) {
+  char *base = name;
+
+  while (*name) {
+    if (*name++ == '/') {
+      base = name;
+    }
+  }
+
+  return base;
+}
+
 /*********************** From the file "report.c" **************************/
 /*
 ** Procedures for generating reports and tables in the LEMON parser generator.
@@ -2963,12 +2987,21 @@ PRIVATE char *file_makename(struct lemon *lemp, const char *suffix)
   char *name;
   char *cp;
 
-  name = (char*)malloc( lemonStrlen(lemp->filename) + lemonStrlen(suffix) + 5 );
+  if (user_output_directory != NULL) {
+    name = (char *) malloc(lemonStrlen(user_output_directory) + lemonStrlen(basename(lemp->filename)) + lemonStrlen(suffix) + 5);
+  } else {
+    name = (char *) malloc(lemonStrlen(lemp->filename) + lemonStrlen(suffix) + 5);
+  }
   if( name==0 ){
     fprintf(stderr,"Can't allocate space for a filename.\n");
     exit(1);
   }
-  lemon_strcpy(name,lemp->filename);
+  if (user_output_directory != NULL) {
+    lemon_strcpy(name, user_output_directory);
+    lemon_strcpy(name+lemonStrlen(user_output_directory), basename(lemp->filename));
+  } else {
+    lemon_strcpy(name, lemp->filename);
+  }
   cp = strrchr(name,'.');
   if( cp ) *cp = 0;
   lemon_strcat(name,suffix);
@@ -2986,7 +3019,9 @@ PRIVATE FILE *file_open(
   FILE *fp;
 
   if( lemp->outname ) free(lemp->outname);
+
   lemp->outname = file_makename(lemp, suffix);
+  printf("* writing %s\n", lemp->outname);
   fp = fopen(lemp->outname,mode);
   if( fp==0 && *mode=='w' ){
     fprintf(stderr,"Can't open file \"%s\".\n",lemp->outname);

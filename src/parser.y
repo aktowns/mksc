@@ -72,4 +72,4 @@ expr4(A) ::= LPAREN expression(B) RPAREN. { A = B; }
 expr4(A) ::= NUMBER(B). { A = mk_number(B->number_value); }
 expr4(A) ::= designator(B). { A = B; }
 
-designator(A) ::= NAME(B). { A = mk_identifier(B->string_value); }
+designator(A) ::= IDENTIFIER(B). { A = mk_identifier(B->string_value); }
