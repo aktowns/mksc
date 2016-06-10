@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
     Parse(parser, 0, NULL, &ast);
 
     if (ast != NULL) {
-        printf("%sAST%s: ", RGB(255, 0, 0), ANSI_NORMAL);
+        printf("%sAST%s: ", RGB(200, 200, 200), ANSI_NORMAL);
         pretty_print_node(ast);
         mks_free(ast);
     }

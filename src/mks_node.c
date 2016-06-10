@@ -1,4 +1,5 @@
 #include "mks_node.h"
+#include "utils/log_utils.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,9 +14,7 @@ mks_node_t *mk_node(mks_node_type tag) {
 }
 
 mks_node_t *mk_identifier(char *identifier) {
-    if (identifier == NULL) {
-        return NULL;
-    }
+    ASSERT(identifier != NULL, "handed a null identifier!");
 
     mks_node_t *node = mk_node(IDENTIFIER);
     mks_identifier_t *id_node = malloc(sizeof(mks_identifier_t));
@@ -305,6 +304,8 @@ void mks_free(mks_node_t *node) {
 }
 
 char *pretty_stringify_node(mks_node_t *node) {
+    ASSERT(node != NULL, "handed a null node!");
+
     char *bfr = NULL;
 
     switch (node->tag) {
