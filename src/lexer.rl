@@ -8,58 +8,112 @@
 #include "utils/string_utils.h"
 
 %%{
-  machine mks_lexer;
+    machine mks_lexer;
 
-  newline = '\n' @{ ++line_counter; line_position = (intptr_t)p; };
-	c_comment := any* :>> '*)' @{ fgoto main; };
+    newline = '\n' @{ ++line_counter; line_position = (intptr_t)p; };
 
-  number = ('+'|'-')?[0-9]+;
-  alpha_u = alpha | '_';
+    comment := any* :>> '*)' @{ fgoto main; };
 
-  main := |*
-    number           => {
-      char* dupd = strdup(ts);
-      char* substr = string_trimend(dupd, te-ts);
-      uint32_t val = strtol(substr, NULL, 10);
-      free(substr);
-      free(dupd);
-      TOKEN(TOKEN_NUMBER);
-      cur_token->number_value = val;
-    };
-    '='              => { TOKEN(TOKEN_ASSIGN); };
-    ';'              => { TOKEN(TOKEN_SEMICOLON); };
-    "=="             => { TOKEN(TOKEN_EQ); };
-    "!="             => { TOKEN(TOKEN_NE); };
-    '<'              => { TOKEN(TOKEN_LT); };
-    '>'              => { TOKEN(TOKEN_GT); };
-    ">="             => { TOKEN(TOKEN_GE); };
-    "<="             => { TOKEN(TOKEN_LE); };
-    '+'              => { TOKEN(TOKEN_PLUS); };
-    '-'              => { TOKEN(TOKEN_MINUS); };
-    '*'              => { TOKEN(TOKEN_MULT); };
-    '/'              => { TOKEN(TOKEN_DIVIDE); };
-    'if'             => { TOKEN(TOKEN_IF); };
-    "then"           => { TOKEN(TOKEN_THEN); };
-    "else"           => { TOKEN(TOKEN_ELSE); };
-    "fi"             => { TOKEN(TOKEN_FI); };
-    "do"             => { TOKEN(TOKEN_DO); };
-    "od"             => { TOKEN(TOKEN_OD); };
-    '('              => { TOKEN(TOKEN_LPAREN); };
-    ')'              => { TOKEN(TOKEN_RPAREN); };
-    alpha_u alpha_u* => {
-      char* dupd = strdup(ts);
-      char* substr = string_trimend(dupd, te-ts);
-      free(dupd);
-      TOKEN(TOKEN_IDENTIFIER);
-      cur_token->string_value = substr;
-    };
+    number = ('+'|'-')?[0-9]+;
 
-    # Comments and whitespace.
-	  '(*' { fgoto c_comment; };
-	  '--' [^\n]* '\n';
-    ( any - 33..126 )+;
+    ident = (lower | '_') (alnum | '_')*;
+    namespaced_ident = (upper (alnum | '_' | '.')*) '.' ident;
 
-    newline;
+    spec_ident = upper (alnum | '_')*;
+    namespaced_spec_ident = (upper (alnum | '_' | '.')*)+;
+
+    main := |*
+        '='              => { TOKEN(TOKEN_ASSIGN); };
+        ';'+             => { TOKEN(TOKEN_SEPERATOR); };
+        '=='             => { TOKEN(TOKEN_EQ); };
+        '!='             => { TOKEN(TOKEN_NE); };
+        '<'              => { TOKEN(TOKEN_LT); };
+        '>'              => { TOKEN(TOKEN_GT); };
+        '>='             => { TOKEN(TOKEN_GE); };
+        '<='             => { TOKEN(TOKEN_LE); };
+        '+'              => { TOKEN(TOKEN_PLUS); };
+        '-'              => { TOKEN(TOKEN_MINUS); };
+        '*'              => { TOKEN(TOKEN_MULT); };
+        '/'              => { TOKEN(TOKEN_DIVIDE); };
+        ','              => { TOKEN(TOKEN_COMMA); };
+
+        'module'         => { TOKEN(TOKEN_MODULE); };
+        'is'             => { TOKEN(TOKEN_IS); };
+        'let'            => { TOKEN(TOKEN_LET); };
+        'if'             => { TOKEN(TOKEN_IF); };
+        'then'           => { TOKEN(TOKEN_THEN); };
+        'else'           => { TOKEN(TOKEN_ELSE); };
+        'fi'             => { TOKEN(TOKEN_FI); };
+        'do'             => { TOKEN(TOKEN_DO); };
+        'od'             => { TOKEN(TOKEN_OD); };
+        '('              => { TOKEN(TOKEN_LPAREN); };
+        ')'              => { TOKEN(TOKEN_RPAREN); };
+
+        number           => {
+            char* dupd = strdup(ts);
+            char* substr = string_trimend(dupd, te-ts);
+            uint32_t val = strtol(substr, NULL, 10);
+            free(substr);
+            free(dupd);
+            TOKEN(TOKEN_NUMBER_LITERAL);
+            cur_token->number_value = val;
+        };
+
+        ident            => {
+            char* dupd = strdup(ts);
+            char* substr = string_trimend(dupd, te-ts);
+            free(dupd);
+            TOKEN(TOKEN_IDENTIFIER);
+            cur_token->string_value = substr;
+        };
+
+        namespaced_ident => {
+            char* dupd = strdup(ts);
+            char* substr = string_trimend(dupd, te-ts);
+            free(dupd);
+            TOKEN(TOKEN_IDENTIFIER);
+            cur_token->string_value = substr;
+        };
+
+        spec_ident       => {
+            char* dupd = strdup(ts);
+            char* substr = string_trimend(dupd, te-ts);
+            free(dupd);
+            TOKEN(TOKEN_SPECIAL_IDENTIFIER);
+            cur_token->string_value = substr;
+        };
+
+        namespaced_spec_ident => {
+            char* dupd = strdup(ts);
+            char* substr = string_trimend(dupd, te-ts);
+            free(dupd);
+            TOKEN(TOKEN_SPECIAL_IDENTIFIER);
+            cur_token->string_value = substr;
+        };
+
+        str_literal = [^'\\] | newline | ( '\\' . (any | newline) );
+        '\'' . str_literal* . '\'' {
+            char* dupd = strdup(ts+1);
+            char* substr = string_trimend(dupd, te-(ts + 2));
+            free(dupd);
+            TOKEN(TOKEN_STRING_LITERAL);
+            cur_token->string_value = substr;
+    	};
+
+    	dstr_literal = [^"\\] | newline | ( '\\' (any | newline) );
+    	'"' . dstr_literal* . '"' {
+            char* dupd = strdup(ts+1);
+            char* substr = string_trimend(dupd, te-(ts + 2));
+            free(dupd);
+            TOKEN(TOKEN_STRING_LITERAL);
+            cur_token->string_value = substr;
+    	};
+
+	    '(*' { fgoto comment; };
+	    '--' [^\n]* '\n' @{ ++line_counter; };
+	    [\t\v\f\r ]+;
+
+        newline;
   *|;
 
 }%%

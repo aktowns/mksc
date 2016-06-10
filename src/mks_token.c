@@ -24,8 +24,11 @@ token_t* mk_token(int type, int line, int col) {
 void token_free(token_t *token) {
     switch(token->type) {
         case TOKEN_IDENTIFIER:
+        case TOKEN_SPECIAL_IDENTIFIER:
+        case TOKEN_STRING_LITERAL:
             free(token->string_value);
             break;
+        default: break;
     }
     free(token);
 }
@@ -40,20 +43,32 @@ void tokens_free(token_t* tokens) {
 
 const char *string_token(token_t *token) {
     switch (token->type) {
-        case TOKEN_NUMBER:
+        case TOKEN_MODULE:
+            return "MODULE";
+        case TOKEN_IS:
+            return "IS";
+        case TOKEN_LET:
+            return "LET";
+        case TOKEN_NUMBER_LITERAL:
             return "NUMBER";
+        case TOKEN_STRING_LITERAL:
+            return "STRING";
         case TOKEN_PLUS:
             return "PLUS";
-        case TOKEN_SEMICOLON:
-            return "SEMICOLON";
+        case TOKEN_SEPERATOR:
+            return "SEPERATOR";
         case TOKEN_ASSIGN:
             return "ASSIGN";
         case TOKEN_LPAREN:
             return "LPAREN";
         case TOKEN_RPAREN:
             return "RPAREN";
+        case TOKEN_COMMA:
+            return "COMMA";
         case TOKEN_IDENTIFIER:
             return "IDENTIFIER";
+        case TOKEN_SPECIAL_IDENTIFIER:
+            return "SPECIAL_IDENTIFIER";
         case TOKEN_EQ:
             return "EQ";
         case TOKEN_IF:
@@ -68,8 +83,8 @@ const char *string_token(token_t *token) {
             return "MINUS";
         case TOKEN_DIVIDE:
             return "DIVIDE";
-        case TOKEN_TIMES:
-            return "TIMES";
+        case TOKEN_MULT:
+            return "MULT";
         case TOKEN_NE:
             return "NE";
         case TOKEN_LT:
@@ -84,8 +99,6 @@ const char *string_token(token_t *token) {
             return "DO";
         case TOKEN_OD:
             return "OD";
-        case TOKEN_MULT:
-            return "MULT";
         default:
             printf("Unknown token type: %i\n", token->type);
             return "unknown";

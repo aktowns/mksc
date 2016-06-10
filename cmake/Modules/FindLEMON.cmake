@@ -106,7 +106,7 @@ if(LEMON_EXECUTABLE)
                        "${OutputDir}/${InputBasename}.h"
                        "${OutputDir}/${InputBasename}.out"
                 COMMAND ${LEMON_EXECUTABLE}
-                ARGS    ${LEMON_EXECUTABLE_opts} -T${LEMON_TEMPLATE} -o${OutputDir}/ ${Input}
+                ARGS    ${LEMON_EXECUTABLE_opts} -p -T${LEMON_TEMPLATE} -o${OutputDir}/ ${Input}
                 DEPENDS ${Input}
                 COMMENT
                 "[LEMON][${Name}] Compiling parser with Lemon ${LEMON_VERSION}"

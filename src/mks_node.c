@@ -4,11 +4,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <mks_node.h>
 
 mks_node_t *mk_node(mks_node_type tag) {
     mks_node_t *node = malloc(sizeof(mks_node_t));
 
     node->tag = tag;
+    node->is_ok = true;
 
     return node;
 }
@@ -25,8 +27,42 @@ mks_node_t *mk_identifier(char *identifier) {
     return node;
 }
 
+mks_node_t *mk_module(mks_node_t *identifier,  mks_node_t *body) {
+    mks_node_t *node = mk_node(MODULE);
+    mks_module_t *mod_node = malloc(sizeof(mks_module_t));
+
+    mod_node->name = identifier;
+    mod_node->body = body;
+    node->module = mod_node;
+
+    return node;
+}
+
+mks_node_t *mk_function_call(mks_node_t *name, mks_node_t *args) {
+    mks_node_t *node = mk_node(FUNCTION_CALL);
+    mks_function_call_t *func_call = malloc(sizeof(mks_module_t));
+
+    func_call->name = name;
+    func_call->arguments = args;
+    node->function_call = func_call;
+
+    return node;
+}
+
+mks_node_t *mk_string(char *identifier) {
+    ASSERT(identifier != NULL, "handed a null identifier!");
+
+    mks_node_t *node = mk_node(STRING_LITERAL);
+    mks_string_t *str_node = malloc(sizeof(mks_identifier_t));
+
+    str_node->value = strdup(identifier);
+    node->string = str_node;
+
+    return node;
+}
+
 mks_node_t *mk_number(int number) {
-    mks_node_t *node = mk_node(NUMBER);
+    mks_node_t *node = mk_node(NUMBER_LITERAL);
 
     mks_number_t *num_node = malloc(sizeof(mks_number_t));
     num_node->value = number;
@@ -58,7 +94,7 @@ mks_node_t *mk_assignment(mks_node_t *name, mks_node_t *value) {
     return node;
 }
 
-mks_node_t *mk_if_stmt(mks_node_t *condition, mks_node_t *true_body, mks_node_t *false_body) {
+mks_node_t *mk_if_expr(mks_node_t *condition, mks_node_t *true_body, mks_node_t *false_body) {
     mks_node_t *node = mk_node(IF_STMT);
 
     mks_if_stmt_t *ifst = malloc(sizeof(mks_if_stmt_t));
@@ -66,17 +102,6 @@ mks_node_t *mk_if_stmt(mks_node_t *condition, mks_node_t *true_body, mks_node_t 
     ifst->true_body = true_body;
     ifst->false_body = false_body;
     node->if_stmt = ifst;
-
-    return node;
-}
-
-mks_node_t *mk_while_stmt(mks_node_t *condition, mks_node_t *body) {
-    mks_node_t *node = mk_node(WHILE_STMT);
-
-    mks_while_stmt_t *whilest = malloc(sizeof(mks_while_stmt_t));
-    whilest->condition = condition;
-    whilest->body = body;
-    node->while_stmt = whilest;
 
     return node;
 }
@@ -191,26 +216,35 @@ mks_node_t *mk_divide_operator(mks_node_t *left, mks_node_t *right) {
     return node;
 }
 
-mks_node_t *mk_empty() {
-    mks_node_t *node = mk_node(DIVIDE_OP);
-
-    node->empty = 0;
-
-    return node;
-}
-
 void mks_free(mks_node_t *node) {
     if (node == NULL)
         return;
 
     switch (node->tag) {
+        case MODULE:
+            mks_free(node->module->name);
+            mks_free(node->module->body);
+            free(node->module);
+            free(node);
+            return;
         case IDENTIFIER:
             free(node->identifier->value);
             free(node->identifier);
             free(node);
             return;
-        case NUMBER:
+        case NUMBER_LITERAL:
             free(node->number);
+            free(node);
+            return;
+        case FUNCTION_CALL:
+            mks_free(node->function_call->name);
+            mks_free(node->function_call->arguments);
+            free(node->function_call);
+            free(node);
+            return;
+        case STRING_LITERAL:
+            free(node->string->value);
+            free(node->string);
             free(node);
             return;
         case SEQUENCE:
@@ -230,12 +264,6 @@ void mks_free(mks_node_t *node) {
             mks_free(node->if_stmt->true_body);
             mks_free(node->if_stmt->false_body);
             free(node->if_stmt);
-            free(node);
-            return;
-        case WHILE_STMT:
-            mks_free(node->while_stmt->condition);
-            mks_free(node->while_stmt->body);
-            free(node->while_stmt);
             free(node);
             return;
         case EQ_OP:
@@ -298,8 +326,12 @@ void mks_free(mks_node_t *node) {
             free(node->divide_op);
             free(node);
             return;
-        case EMPTY:
+        case ERROR: {
+            if (node->error != NULL) {
+                free(node->error);
+            }
             free(node);
+        }
     }
 }
 
@@ -309,11 +341,30 @@ char *pretty_stringify_node(mks_node_t *node) {
     char *bfr = NULL;
 
     switch (node->tag) {
+        case MODULE: {
+            char *name = pretty_stringify_node(node->module->name);
+            char *body = pretty_stringify_node(node->module->body);
+            asprintf(&bfr, "<mks_module_t: name=%s body=%s>", name, body);
+            free(name);
+            free(body);
+            return bfr;
+        }
         case IDENTIFIER:
             asprintf(&bfr, "<mks_identifier_t: value=%s>", node->identifier->value);
             return bfr;
-        case NUMBER:
-            asprintf(&bfr, "<mks_number_t: value=%i", node->number->value);
+        case FUNCTION_CALL: {
+            char *name = pretty_stringify_node(node->function_call->name);
+            char *args = pretty_stringify_node(node->function_call->arguments);
+            asprintf(&bfr, "<mks_function_call_t: name=%s args=%s>", name, args);
+            free(name);
+            free(args);
+            return bfr;
+        }
+        case NUMBER_LITERAL:
+            asprintf(&bfr, "<mks_number_t: value=%i>", node->number->value);
+            return bfr;
+        case STRING_LITERAL:
+            asprintf(&bfr, "<mks_string_t: value=%s>", node->string->value);
             return bfr;
         case SEQUENCE: {
             char *left = pretty_stringify_node(node->sequence->left);
@@ -335,19 +386,11 @@ char *pretty_stringify_node(mks_node_t *node) {
             char *condition = pretty_stringify_node(node->if_stmt->condition);
             char *true_body = pretty_stringify_node(node->if_stmt->true_body);
             char *false_body = pretty_stringify_node(node->if_stmt->false_body);
-            asprintf(&bfr, "<mks_if_smtmt_t: condition=%s, true_body=%s, false_body=%s>", condition, true_body,
+            asprintf(&bfr, "<mks_if_expr_t: condition=%s, true_body=%s, false_body=%s>", condition, true_body,
                      false_body);
             free(condition);
             free(true_body);
             free(false_body);
-            return bfr;
-        }
-        case WHILE_STMT: {
-            char *condition = pretty_stringify_node(node->while_stmt->condition);
-            char *body = pretty_stringify_node(node->while_stmt->body);
-            asprintf(&bfr, "<mk_while_stmt_t: condition=%s, body=%s>", condition, body);
-            free(condition);
-            free(body);
             return bfr;
         }
         case EQ_OP: {
@@ -430,8 +473,8 @@ char *pretty_stringify_node(mks_node_t *node) {
             free(right);
             return bfr;
         }
-        case EMPTY: {
-            asprintf(&bfr, "<mk_empty_t>");
+        case ERROR: {
+            asprintf(&bfr, "<mk_error_t value=%s>", node->error);
             return bfr;
         }
     }

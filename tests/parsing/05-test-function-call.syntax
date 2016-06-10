@@ -1,0 +1,16 @@
+module Tests.Parsing.Test5 is
+
+let unused = print("Hello World");
+
+let unused = add(10, 20);
+
+let unused = pewpew(z, e, "woo", 33);
+
+let unused = do
+    let z = 1;
+    print(z);
+od;
+
+let unused = if z then puts("yo") else puts("no") fi;
+
+let unused = System.print("woo");

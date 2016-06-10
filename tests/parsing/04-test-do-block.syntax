@@ -1,0 +1,14 @@
+module Tests.Parsing.Test4 is
+
+let unused = do
+    let z = 3;
+    1;
+    2 + 2;
+    3;
+od;
+
+let unused = do
+    1;
+od;
+
+let unused = do 10; od;

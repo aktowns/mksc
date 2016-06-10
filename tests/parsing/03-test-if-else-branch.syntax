@@ -1,5 +1,49 @@
-if a == b then
-  c;
-else
-  d;
-fi
+module Tests.Parsing.Test3 is
+
+let unused = if a == b then c else d fi;
+
+let unused = if a != b then 1 else 4 fi;
+
+let unused = if a then "whoa" else "yeah" fi;
+
+let unused = if e >= f then
+                x + x
+             else
+                x
+             fi;
+
+let unused = if e <= f then
+                x + x;
+                y + y;
+             else
+                z + z;
+                d + d;
+             fi;
+
+let unused = if e <= f then
+                y + y
+             else
+                z + z;
+                d + d;
+             fi;
+
+let unused = if e <= f then
+                y + y
+             else
+                let a = z + z;
+                a + d;
+             fi;
+
+let unused = if z then
+                if y then
+                    a + a
+                else
+                    b + b
+                fi
+             else
+                c + c
+             fi;
+
+-- Yeah this parses :D
+let unused = if z then if d then a else r fi else d fi;
+let unused = if z then (if d then a else r fi) else d fi;

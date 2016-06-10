@@ -12,12 +12,12 @@ set(CMAKE_NM      "/usr/bin/llvm-nm")
 set(CMAKE_OBJDUMP "/usr/bin/llvm-objdump")
 set(CMAKE_RANLIB  "/usr/bin/llvm-ranlib")
 
-set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -O1 -Werror -Wall -std=gnu11 -fsanitize=address -fblocks -fno-omit-frame-pointer")
+set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -g -O1 -Werror -Wall -std=gnu11 -fsanitize=address -fblocks -fno-omit-frame-pointer")
 set(CMAKE_C_FLAGS_DEBUG "-g")
 
 add_definitions(-D_GNU_SOURCE=1)
 
-include_directories(include)
+include_directories(./include)
 include_directories(${CMAKE_BINARY_DIR})
 
 find_package(RAGEL 6.9 REQUIRED)
@@ -32,7 +32,9 @@ lemon_target(parser ${CMAKE_SOURCE_DIR}/src/parser.y ${CMAKE_BINARY_DIR})
 set(SYNTAX_TEST_FILES
         tests/parsing/01-test-expression.syntax
         tests/parsing/02-test-assign.syntax
-        tests/parsing/03-test-if-else-branch.syntax)
+        tests/parsing/03-test-if-else-branch.syntax
+        tests/parsing/04-test-do-block.syntax
+        tests/parsing/05-test-function-call.syntax)
 
 set(SOURCE_FILES
         src/main.c
@@ -42,7 +44,25 @@ set(SOURCE_FILES
         src/utils/string_utils.c
         src/utils/memory_utils.c
         ${RAGEL_lexer_OUTPUTS}
-        ${LEMON_parser_SOURCE_OUTPUT})
+        ${LEMON_parser_SOURCE_OUTPUT}
+
+        src/lexer.rl
+        src/parser.y
+
+        include/mks_node.h
+        include/mks_token.h
+        include/parser_exports.h
+        include/utils/ansi_colour.h
+        include/utils/file_utils.h
+        include/utils/log_utils.h
+        include/utils/memory_utils.h
+        include/utils/string_utils.h
+
+        tests/parsing/01-test-expression.syntax
+        tests/parsing/02-test-assign.syntax
+        tests/parsing/03-test-if-else-branch.syntax
+        tests/parsing/04-test-do-block.syntax
+        tests/parsing/05-test-function-call.syntax)
 
 add_executable(mksc ${SOURCE_FILES})
 

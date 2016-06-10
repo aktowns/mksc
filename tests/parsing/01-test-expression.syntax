@@ -1,1 +1,14 @@
-1 + 1;
+module Tests.Parsing.Test1 is
+
+let unused = 1 + 1;
+let unused = 2 * 2;
+let unused = 3 / 3;
+let unused = 4 - 4;
+let unused = 5 == 5;
+let unused = 6 != 6;
+let unused = 7 >= 7;
+let unused = 8 <= 8;
+let unused = 9 < 9;
+let unused = 10 > 10;
+let unused = 1337;
+let unused = "Hello World";

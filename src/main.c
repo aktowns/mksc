@@ -16,6 +16,7 @@ int main(int argc, char **argv) {
 
     char *contents = read_file(argv[1]);
 
+
     token_t *tokens = lex(contents);
 
     print_tokens(tokens);
@@ -23,20 +24,24 @@ int main(int argc, char **argv) {
 
     void *parser = ParseAlloc(malloc);
 
+    // ParseTrace(stdout, "* > ");
+
+
     mks_token_iterate(tokens, ^(token_t* token) { Parse(parser, token->type, token, NULL); });
 
-    tokens_free(tokens);
-
     mks_node_t *ast = NULL;
+
     Parse(parser, 0, NULL, &ast);
 
-    if (ast != NULL) {
+    if (ast != NULL && ast->is_ok) {
         printf("%sAST%s: ", RGB(200, 200, 200), ANSI_NORMAL);
         pretty_print_node(ast);
-        mks_free(ast);
     }
 
+    mks_free(ast);
+    tokens_free(tokens);
     ParseFree(parser, free);
+
 
     free(contents);
 

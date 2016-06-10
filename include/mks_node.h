@@ -1,15 +1,19 @@
 #ifndef __MKS_NODE_H
 #define __MKS_NODE_H
 
+#include <stdbool.h>
+
 struct mks_node;
 
 typedef enum {
+    MODULE,
+    FUNCTION_CALL,
     IDENTIFIER,
-    NUMBER,
+    NUMBER_LITERAL,
+    STRING_LITERAL,
     SEQUENCE,
     ASSIGNMENT,
     IF_STMT,
-    WHILE_STMT,
     EQ_OP,
     NE_OP,
     LT_OP,
@@ -20,7 +24,7 @@ typedef enum {
     MINUS_OP,
     MULT_OP,
     DIVIDE_OP,
-    EMPTY
+    ERROR
 } mks_node_type;
 
 typedef struct {
@@ -28,8 +32,17 @@ typedef struct {
 } mks_identifier_t;
 
 typedef struct {
+    struct mks_node *name;
+    struct mks_node *body;
+} mks_module_t;
+
+typedef struct {
     int value;
 } mks_number_t;
+
+typedef struct {
+    char *value;
+} mks_string_t;
 
 typedef struct {
     struct mks_node *left;
@@ -46,11 +59,6 @@ typedef struct {
     struct mks_node *true_body;
     struct mks_node *false_body;
 } mks_if_stmt_t;
-
-typedef struct {
-    struct mks_node *condition;
-    struct mks_node *body;
-} mks_while_stmt_t;
 
 typedef struct {
     struct mks_node *left;
@@ -102,18 +110,22 @@ typedef struct {
     struct mks_node *right;
 } mks_divide_operator_t;
 
-typedef int mks_empty_t;
+typedef struct {
+    struct mks_node *name;
+    struct mks_node *arguments;
+} mks_function_call_t;
 
 struct mks_node {
     mks_node_type tag;
+    bool is_ok;
 
     union {
         mks_identifier_t *identifier;
         mks_number_t *number;
+        mks_string_t *string;
         mks_sequence_t *sequence;
         mks_assignment_t *assignment;
         mks_if_stmt_t *if_stmt;
-        mks_while_stmt_t *while_stmt;
         mks_eq_operator_t *eq_op;
         mks_ne_operator_t *ne_op;
         mks_lt_operator_t *lt_op;
@@ -124,13 +136,23 @@ struct mks_node {
         mks_minus_operator_t *minus_op;
         mks_mult_operator_t *mult_op;
         mks_divide_operator_t *divide_op;
-        mks_empty_t empty;
+        mks_module_t *module;
+        mks_function_call_t *function_call;
+        char* error;
     };
 };
 
 typedef struct mks_node mks_node_t;
 
+mks_node_t *mk_node(mks_node_type tag);
+
+mks_node_t *mk_module(mks_node_t *identifier, mks_node_t *body);
+
+mks_node_t *mk_function_call(mks_node_t *name, mks_node_t *args);
+
 mks_node_t *mk_identifier(char *value);
+
+mks_node_t *mk_string(char *identifier);
 
 mks_node_t *mk_number(int value);
 
@@ -138,9 +160,7 @@ mks_node_t *mk_sequence(mks_node_t *left, mks_node_t *right);
 
 mks_node_t *mk_assignment(mks_node_t *name, mks_node_t *value);
 
-mks_node_t *mk_if_stmt(mks_node_t *condition, mks_node_t *true_body, mks_node_t *false_body);
-
-mks_node_t *mk_while_stmt(mks_node_t *condition, mks_node_t *body);
+mks_node_t *mk_if_expr(mks_node_t *condition, mks_node_t *true_body, mks_node_t *false_body);
 
 mks_node_t *mk_eq_operator(mks_node_t *left, mks_node_t *right);
 
@@ -161,8 +181,6 @@ mks_node_t *mk_minus_operator(mks_node_t *left, mks_node_t *right);
 mks_node_t *mk_mult_operator(mks_node_t *left, mks_node_t *right);
 
 mks_node_t *mk_divide_operator(mks_node_t *left, mks_node_t *right);
-
-mks_node_t *mk_empty();
 
 void mks_free(mks_node_t *node);
 

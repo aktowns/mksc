@@ -1,1 +1,7 @@
-a = (1 + 1);
+module Tests.Parsing.Test2 is
+
+let some_var = 1 + 120;
+
+let another_var = 1;
+
+let woo = some_var;
