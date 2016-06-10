@@ -1,10 +1,10 @@
-%include
-{
+%include {
     #include <stdlib.h>
     #include <stdio.h>
     #include <assert.h>
-    #include <mks_node.h>
-    #include <token.h>
+
+    #include "mks_node.h"
+    #include "mks_token.h"
 
     #pragma clang diagnostic ignored "-Wunused-variable"
 }
@@ -21,6 +21,7 @@
         printf("\n");
 }
 
+%token_prefix TOKEN_
 %token_type { token_t * }
 %default_type { mks_node_t * }
 %type start { mks_node_t * }

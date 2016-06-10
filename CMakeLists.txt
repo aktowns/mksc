@@ -37,7 +37,10 @@ set(SYNTAX_TEST_FILES
 set(SOURCE_FILES
         src/main.c
         src/mks_node.c
-        src/string_utils.c
+        src/mks_token.c
+        src/utils/file_utils.c
+        src/utils/string_utils.c
+        src/utils/memory_utils.c
         ${RAGEL_lexer_OUTPUTS}
         ${LEMON_parser_SOURCE_OUTPUT})
 

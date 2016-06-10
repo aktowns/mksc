@@ -1,10 +1,11 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "parser.h"
 #include <stdint.h>
-#include <string_utils.h>
-#include <token.h>
+
+#include "parser.h"
+#include "mks_token.h"
+#include "utils/string_utils.h"
 
 %%{
   machine mks_lexer;
@@ -22,34 +23,34 @@
       uint32_t val = strtol(substr, NULL, 10);
       free(substr);
       free(dupd);
-      TOKEN(NUMBER);
+      TOKEN(TOKEN_NUMBER);
       cur_token->number_value = val;
     };
-    '='              => { TOKEN(ASSIGN); };
-    ';'              => { TOKEN(SEMICOLON); };
-    "=="             => { TOKEN(EQ); };
-    "!="             => { TOKEN(NE); };
-    '<'              => { TOKEN(LT); };
-    '>'              => { TOKEN(GT); };
-    ">="             => { TOKEN(GE); };
-    "<="             => { TOKEN(LE); };
-    '+'              => { TOKEN(PLUS); };
-    '-'              => { TOKEN(MINUS); };
-    '*'              => { TOKEN(MULT); };
-    '/'              => { TOKEN(DIVIDE); };
-    'if'             => { TOKEN(IF); };
-    "then"           => { TOKEN(THEN); };
-    "else"           => { TOKEN(ELSE); };
-    "fi"             => { TOKEN(FI); };
-    "do"             => { TOKEN(DO); };
-    "od"             => { TOKEN(OD); };
-    '('              => { TOKEN(LPAREN); };
-    ')'              => { TOKEN(RPAREN); };
+    '='              => { TOKEN(TOKEN_ASSIGN); };
+    ';'              => { TOKEN(TOKEN_SEMICOLON); };
+    "=="             => { TOKEN(TOKEN_EQ); };
+    "!="             => { TOKEN(TOKEN_NE); };
+    '<'              => { TOKEN(TOKEN_LT); };
+    '>'              => { TOKEN(TOKEN_GT); };
+    ">="             => { TOKEN(TOKEN_GE); };
+    "<="             => { TOKEN(TOKEN_LE); };
+    '+'              => { TOKEN(TOKEN_PLUS); };
+    '-'              => { TOKEN(TOKEN_MINUS); };
+    '*'              => { TOKEN(TOKEN_MULT); };
+    '/'              => { TOKEN(TOKEN_DIVIDE); };
+    'if'             => { TOKEN(TOKEN_IF); };
+    "then"           => { TOKEN(TOKEN_THEN); };
+    "else"           => { TOKEN(TOKEN_ELSE); };
+    "fi"             => { TOKEN(TOKEN_FI); };
+    "do"             => { TOKEN(TOKEN_DO); };
+    "od"             => { TOKEN(TOKEN_OD); };
+    '('              => { TOKEN(TOKEN_LPAREN); };
+    ')'              => { TOKEN(TOKEN_RPAREN); };
     alpha_u alpha_u* => {
       char* dupd = strdup(ts);
       char* substr = string_trimend(dupd, te-ts);
       free(dupd);
-      TOKEN(IDENTIFIER);
+      TOKEN(TOKEN_IDENTIFIER);
       cur_token->string_value = substr;
     };
 
@@ -57,6 +58,7 @@
 	  '(*' { fgoto c_comment; };
 	  '--' [^\n]* '\n';
     ( any - 33..126 )+;
+
     newline;
   *|;
 
@@ -68,16 +70,6 @@
 #endif
 %% write data nofinal;
 #pragma clang diagnostic pop
-
-token_t* mk_token(int type, int line, int col) {
-  token_t* tok = malloc(sizeof(token_t));
-  tok->type = type;
-  tok->line_no = line;
-  tok->column_no = col;
-  tok->next = NULL;
-
-  return tok;
-}
 
 #define TOKEN(t) \
   token_t* tok = mk_token(t, line_counter, (intptr_t)(ts - line_position) + 1); \
@@ -98,6 +90,7 @@ token_t* lex(char* bfr) {
   char *eof = pe;
   int cs = 0, act = 0;
   char *ts, *te;
+
   %%write init;
 
   token_t *tokens = NULL;
@@ -106,21 +99,4 @@ token_t* lex(char* bfr) {
   %%write exec;
 
   return tokens;
-}
-
-void token_free(token_t *token) {
-  switch(token->type) {
-    case IDENTIFIER:
-      free(token->string_value);
-      break;
-  }
-  free(token);
-}
-
-void lex_free(token_t* tokens) {
-  token_t* curr;
-  while ((curr = tokens) != NULL) {
-    tokens = tokens->next;
-    token_free(curr);
-  }
 }
