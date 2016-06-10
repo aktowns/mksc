@@ -41,15 +41,15 @@ pre-build:
 
 post-build:
 	# grrr lemon.
-	rm -f src/gen/*
 	rm -f src/parser.{c,out}
-	rm -f include/parser.h
 
 test: all
 	@echo -e "\n================================\n"
-	./mksc tests/parsing/01-test.syntax
+	./mksc tests/parsing/01-test-expression.syntax
 	@echo -e "\n================================\n"
-	./mksc tests/parsing/02-test.syntax
+	./mksc tests/parsing/02-test-assign.syntax
+	@echo -e "\n================================\n"
+	./mksc tests/parsing/03-test-if-else-branch.syntax
 	@echo -e "\n================================\n"
 
 make_vim_happy:
