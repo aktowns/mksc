@@ -36,7 +36,8 @@ set(SYNTAX_TEST_FILES
         tests/parsing/04-test-do-block.syntax
         tests/parsing/05-test-function-call.syntax
         tests/parsing/06-test-function-declaration.syntax
-        tests/parsing/07-test-import-statement.syntax)
+        tests/parsing/07-test-import-statement.syntax
+        tests/parsing/08-test-mode-export.syntax)
 
 set(SOURCE_FILES
         src/main.c

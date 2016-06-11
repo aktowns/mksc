@@ -40,3 +40,6 @@ tags
 mksc
 src/gen
 deps/lemon
+build/
+.idea
+compile_commands.json

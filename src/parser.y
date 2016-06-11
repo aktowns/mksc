@@ -50,7 +50,12 @@
 %nonassoc EQ NE GT GE LT LE.
 
 top ::= MODULE special_identifier(B) IS toplevelseq(C) SEPERATOR. {
-    mks_node_t* res = mk_module(B, C);
+    mks_node_t* res = mk_module(B, C, mk_node(EMPTY));
+    res->is_ok = is_ok;
+    *result = res;
+}
+top ::= MODULE special_identifier(B) LPAREN arglist(D) RPAREN IS toplevelseq(C) SEPERATOR. {
+    mks_node_t* res = mk_module(B, C, D);
     res->is_ok = is_ok;
     *result = res;
 }

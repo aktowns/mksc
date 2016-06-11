@@ -15,7 +15,7 @@ typedef enum {
     STRING_LITERAL,
     SEQUENCE,
     ASSIGNMENT,
-    IF_STMT,
+    IF,
     EQ_OP,
     NE_OP,
     LT_OP,
@@ -36,6 +36,7 @@ typedef struct {
 typedef struct {
     struct mks_node *name;
     struct mks_node *body;
+    struct mks_node *exports;
 } mks_module_t;
 
 typedef struct {
@@ -163,7 +164,7 @@ mks_node_t *mk_node(mks_node_type tag);
 
 mks_node_t *mk_copy(mks_node_t* src);
 
-mks_node_t *mk_module(mks_node_t *identifier, mks_node_t *body);
+mks_node_t *mk_module(mks_node_t *identifier, mks_node_t *body, mks_node_t* exports);
 
 mks_node_t *mk_import(mks_node_t *name, mks_node_t *qualified, mks_node_t *specific);
 
