@@ -1,0 +1,8 @@
+module Tests.Parsing.Test10 is
+
+let unused = 1337;
+let unused = -7331;
+let unused = +4242;
+let unused = 10 + 10;
+let unused = 10 / 0;
+let unused = 43 - 1;

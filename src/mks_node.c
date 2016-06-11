@@ -406,7 +406,7 @@ char *pretty_stringify_node(mks_node_t *node) {
             char *name = pretty_stringify_node(node->module->name);
             char *body = pretty_stringify_node(node->module->body);
             char *exports = pretty_stringify_node(node->module->exports);
-            asprintf(&bfr, "<module name=%s exports=%s body=%s>", name, body, exports);
+            asprintf(&bfr, "<module name=%s exports=%s body=%s>", name, exports, body);
             free(name);
             free(body);
             free(exports);

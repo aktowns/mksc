@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
 
     token_t *tokens = lex(contents);
 
-    print_tokens(tokens);
+    //print_tokens(tokens);
     annotate_source(argv[1], tokens);
 
     void *parser = ParseAlloc(malloc);

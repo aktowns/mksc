@@ -1,0 +1,6 @@
+module Tests.Parsing.Test9 is
+
+let unused = "Hello World";
+let unused = 'Yeah you, World';
+let unused = "Hello \n World!";
+let unused = "World" + "Hello";

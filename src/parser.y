@@ -106,6 +106,7 @@ expression(A) ::= LPAREN expression(B) RPAREN. { A = B; }
 
 expression(A) ::= literal(B). { A = B; }
 expression(A) ::= identifier(B). { A = B; }
+expression(A) ::= identifier_index(B). { A = B; }
 
 arglist(A) ::= expression(B). { A = B; }
 arglist(A) ::= arglist(B) COMMA expression(C). { A = mk_sequence(B, C); }
@@ -114,5 +115,8 @@ literal(A) ::= NUMBER_LITERAL(B). { A = mk_number(B->number_value); }
 literal(A) ::= STRING_LITERAL(B). { A = mk_string(B->string_value); }
 
 identifier(A) ::= IDENTIFIER(B). { A = mk_identifier(B->string_value); }
+
+identifier_index(A) ::= IDENTIFIER(B) LBRACK expression(C) RBRACK.
+{ A = mk_function_call(mk_identifier("array_index"), mk_sequence(mk_identifier(B->string_value), C)); }
 
 special_identifier(A) ::= SPECIAL_IDENTIFIER(B). { A = mk_identifier(B->string_value); }

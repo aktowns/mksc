@@ -67,6 +67,10 @@ const char *string_token(token_t *token) {
             return "LPAREN";
         case TOKEN_RPAREN:
             return "RPAREN";
+        case TOKEN_LBRACK:
+            return "LBRACK";
+        case TOKEN_RBRACK:
+            return "RBRACK";
         case TOKEN_COMMA:
             return "COMMA";
         case TOKEN_IDENTIFIER:

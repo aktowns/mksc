@@ -1,0 +1,6 @@
+module Tests.Parsing.Test11 is
+
+let unused = hello[3];
+let unused = hello[5 + 5];
+let unused = hello[some_func(10)];
+let unused = hello[some_var[20]];

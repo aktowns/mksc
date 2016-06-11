@@ -50,6 +50,8 @@
         'od'             => { TOKEN(TOKEN_OD); };
         '('              => { TOKEN(TOKEN_LPAREN); };
         ')'              => { TOKEN(TOKEN_RPAREN); };
+        '['              => { TOKEN(TOKEN_LBRACK); };
+        ']'              => { TOKEN(TOKEN_RBRACK); };
 
         number           => {
             char* dupd = strdup(ts);
