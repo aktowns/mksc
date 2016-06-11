@@ -18,6 +18,7 @@ mks_node_t *mk_node(mks_node_type tag) {
         case NODE_ARRAY_LITERAL:
             node->type = mk_type(UNRESOLVED, UNARY);
             break;
+        case NODE_TUPLE:
         case NODE_FUNCTION:
             node->type = mk_type(UNRESOLVED, BINARY);
             break;
@@ -130,6 +131,17 @@ mks_node_t *mk_sequence(mks_node_t *left, mks_node_t *right) {
     return node;
 }
 
+mks_node_t *mk_tuple(mks_node_t *one, mks_node_t *two) {
+    mks_node_t *node = mk_node(NODE_TUPLE);
+
+    mks_tuple_t *tup = malloc(sizeof(mks_tuple_t));
+    tup->one = one;
+    tup->two = two;
+    node->tuple = tup;
+
+    return node;
+}
+
 mks_node_t *mk_assignment(mks_node_t *name, mks_node_t *value) {
     mks_node_t *node = mk_node(NODE_ASSIGNMENT);
 
@@ -156,7 +168,7 @@ mks_node_t *mk_if_expr(mks_node_t *condition, mks_node_t *true_body, mks_node_t 
 mks_node_t *mk_eq_operator(mks_node_t *left, mks_node_t *right) {
     mks_node_t *node = mk_node(NODE_EQ_OP);
 
-    mks_eq_operator_t *eq = malloc(sizeof(mks_eq_operator_t));
+    mks_operator_t *eq = malloc(sizeof(mks_operator_t));
     eq->left = left;
     eq->right = right;
     node->eq_op = eq;
@@ -167,7 +179,7 @@ mks_node_t *mk_eq_operator(mks_node_t *left, mks_node_t *right) {
 mks_node_t *mk_ne_operator(mks_node_t *left, mks_node_t *right) {
     mks_node_t *node = mk_node(NODE_NE_OP);
 
-    mks_ne_operator_t *ne = malloc(sizeof(mks_ne_operator_t));
+    mks_operator_t *ne = malloc(sizeof(mks_operator_t));
     ne->left = left;
     ne->right = right;
     node->ne_op = ne;
@@ -178,7 +190,7 @@ mks_node_t *mk_ne_operator(mks_node_t *left, mks_node_t *right) {
 mks_node_t *mk_gt_operator(mks_node_t *left, mks_node_t *right) {
     mks_node_t *node = mk_node(NODE_GT_OP);
 
-    mks_gt_operator_t *gt = malloc(sizeof(mks_gt_operator_t));
+    mks_operator_t *gt = malloc(sizeof(mks_operator_t));
     gt->left = left;
     gt->right = right;
     node->gt_op = gt;
@@ -189,7 +201,7 @@ mks_node_t *mk_gt_operator(mks_node_t *left, mks_node_t *right) {
 mks_node_t *mk_lt_operator(mks_node_t *left, mks_node_t *right) {
     mks_node_t *node = mk_node(NODE_LT_OP);
 
-    mks_lt_operator_t *lt = malloc(sizeof(mks_lt_operator_t));
+    mks_operator_t *lt = malloc(sizeof(mks_operator_t));
     lt->left = left;
     lt->right = right;
     node->lt_op = lt;
@@ -200,7 +212,7 @@ mks_node_t *mk_lt_operator(mks_node_t *left, mks_node_t *right) {
 mks_node_t *mk_ge_operator(mks_node_t *left, mks_node_t *right) {
     mks_node_t *node = mk_node(NODE_GE_OP);
 
-    mks_ge_operator_t *ge = malloc(sizeof(mks_ge_operator_t));
+    mks_operator_t *ge = malloc(sizeof(mks_operator_t));
     ge->left = left;
     ge->right = right;
     node->ge_op = ge;
@@ -211,7 +223,7 @@ mks_node_t *mk_ge_operator(mks_node_t *left, mks_node_t *right) {
 mks_node_t *mk_le_operator(mks_node_t *left, mks_node_t *right) {
     mks_node_t *node = mk_node(NODE_LE_OP);
 
-    mks_le_operator_t *le = malloc(sizeof(mks_le_operator_t));
+    mks_operator_t *le = malloc(sizeof(mks_operator_t));
     le->left = left;
     le->right = right;
     node->le_op = le;
@@ -222,7 +234,7 @@ mks_node_t *mk_le_operator(mks_node_t *left, mks_node_t *right) {
 mks_node_t *mk_plus_operator(mks_node_t *left, mks_node_t *right) {
     mks_node_t *node = mk_node(NODE_PLUS_OP);
 
-    mks_plus_operator_t *plus = malloc(sizeof(mks_plus_operator_t));
+    mks_operator_t *plus = malloc(sizeof(mks_operator_t));
     plus->left = left;
     plus->right = right;
     node->plus_op = plus;
@@ -233,7 +245,7 @@ mks_node_t *mk_plus_operator(mks_node_t *left, mks_node_t *right) {
 mks_node_t *mk_minus_operator(mks_node_t *left, mks_node_t *right) {
     mks_node_t *node = mk_node(NODE_MINUS_OP);
 
-    mks_minus_operator_t *minus = malloc(sizeof(mks_minus_operator_t));
+    mks_operator_t *minus = malloc(sizeof(mks_operator_t));
     minus->left = left;
     minus->right = right;
     node->minus_op = minus;
@@ -244,7 +256,7 @@ mks_node_t *mk_minus_operator(mks_node_t *left, mks_node_t *right) {
 mks_node_t *mk_mult_operator(mks_node_t *left, mks_node_t *right) {
     mks_node_t *node = mk_node(NODE_MULT_OP);
 
-    mks_mult_operator_t *mult = malloc(sizeof(mks_mult_operator_t));
+    mks_operator_t *mult = malloc(sizeof(mks_operator_t));
     mult->left = left;
     mult->right = right;
     node->mult_op = mult;
@@ -255,7 +267,7 @@ mks_node_t *mk_mult_operator(mks_node_t *left, mks_node_t *right) {
 mks_node_t *mk_divide_operator(mks_node_t *left, mks_node_t *right) {
     mks_node_t *node = mk_node(NODE_DIVIDE_OP);
 
-    mks_divide_operator_t *divide = malloc(sizeof(mks_divide_operator_t));
+    mks_operator_t *divide = malloc(sizeof(mks_operator_t));
     divide->left = left;
     divide->right = right;
     node->divide_op = divide;
@@ -336,6 +348,12 @@ void mks_free_node(mks_node_t *node) {
             mks_free_node(node->sequence->left);
             mks_free_node(node->sequence->right);
             free(node->sequence);
+            free(node);
+            return;
+        case NODE_TUPLE:
+            mks_free_node(node->tuple->one);
+            mks_free_node(node->tuple->two);
+            free(node->tuple);
             free(node);
             return;
         case NODE_ASSIGNMENT:
@@ -442,7 +460,6 @@ mks_node_t *mk_copy(mks_node_t *src) {
     return newnode;
 }
 
-
 char *pretty_stringify_node(mks_node_t *node) {
     ASSERT(node != NULL, "handed a null node!");
 
@@ -511,6 +528,14 @@ char *pretty_stringify_node(mks_node_t *node) {
             asprintf(&bfr, "<sequence type=%s left=%s, right=%s>", type, left, right);
             free(left);
             free(right);
+            break;
+        }
+        case NODE_TUPLE: {
+            char *one = pretty_stringify_node(node->tuple->one);
+            char *two = pretty_stringify_node(node->tuple->two);
+            asprintf(&bfr, "<tuple type=%s one=%s, two=%s>", type, one, two);
+            free(one);
+            free(two);
             break;
         }
         case NODE_ASSIGNMENT: {
@@ -616,13 +641,184 @@ char *pretty_stringify_node(mks_node_t *node) {
             asprintf(&bfr, "empty");
             break;
         }
-        default: {
-            asprintf(&bfr, "!!unknown node!!");
+    }
+
+    free(type);
+    return bfr;
+}
+
+char *pretty_stringify_value(mks_node_t *node) {
+    ASSERT(node != NULL, "handed a null node!");
+
+    char *bfr = NULL;
+
+    switch (node->tag) {
+        case NODE_MODULE: {
+            char *name = pretty_stringify_node(node->module->name);
+            asprintf(&bfr, "module %s", name);
+            free(name);
+            break;
+        }
+        case NODE_IMPORT: {
+            char *name = pretty_stringify_node(node->import->name);
+            asprintf(&bfr, "import %s", name);
+            free(name);
+            break;
+        }
+        case NODE_IDENTIFIER: {
+            asprintf(&bfr, "%s", node->identifier->value);
+            break;
+        }
+        case NODE_FUNCTION_CALL: {
+            char *name = pretty_stringify_node(node->function_call->name);
+            char *args = pretty_stringify_node(node->function_call->arguments);
+            asprintf(&bfr, "%s(%s)", name, args);
+            free(name);
+            free(args);
+            break;
+        }
+        case NODE_FUNCTION: {
+            char *args = pretty_stringify_node(node->function->argument);
+            char *body = pretty_stringify_node(node->function->body);
+            asprintf(&bfr, "function<%s>(%s)", args, body);
+            free(body);
+            free(args);
+            break;
+        }
+        case NODE_NUMBER_LITERAL: {
+            asprintf(&bfr, "%i", node->number->value);
+            break;
+        }
+        case NODE_STRING_LITERAL: {
+            asprintf(&bfr, "\"%s\"", node->string->value);
+            break;
+        }
+        case NODE_ARRAY_LITERAL: {
+            char *items = pretty_stringify_node(node->array->items);
+            asprintf(&bfr, "[%s]", items);
+            free(items);
+            break;
+        }
+        case NODE_SEQUENCE: {
+            char *left = pretty_stringify_node(node->sequence->left);
+            char *right = pretty_stringify_node(node->sequence->right);
+            asprintf(&bfr, "(%s, %s)", left, right);
+            free(left);
+            free(right);
+            break;
+        }
+        case NODE_TUPLE: {
+            char *one = pretty_stringify_node(node->tuple->one);
+            char *two = pretty_stringify_node(node->tuple->two);
+            asprintf(&bfr, "(%s, %s)", one, two);
+            free(one);
+            free(two);
+            break;
+        }
+        case NODE_ASSIGNMENT: {
+            char *name = pretty_stringify_node(node->assignment->identifier);
+            char *value = pretty_stringify_node(node->assignment->value);
+            asprintf(&bfr, "%s=%s", name, value);
+            free(name);
+            free(value);
+            break;
+        }
+        case NODE_IF: {
+            char *condition = pretty_stringify_node(node->if_stmt->condition);
+            char *true_body = pretty_stringify_node(node->if_stmt->true_body);
+            char *false_body = pretty_stringify_node(node->if_stmt->false_body);
+            asprintf(&bfr, "if (%s) then { %s } else { %s } fi", condition, true_body, false_body);
+            free(condition);
+            free(true_body);
+            free(false_body);
+            break;
+        }
+        case NODE_EQ_OP: {
+            char *left = pretty_stringify_node(node->eq_op->left);
+            char *right = pretty_stringify_node(node->eq_op->right);
+            asprintf(&bfr, "%s == %s", left, right);
+            free(left);
+            free(right);
+            break;
+        }
+        case NODE_NE_OP: {
+            char *left = pretty_stringify_node(node->eq_op->left);
+            char *right = pretty_stringify_node(node->eq_op->right);
+            asprintf(&bfr, "%s != %s", left, right);
+            free(left);
+            free(right);
+            break;
+        }
+        case NODE_LE_OP: {
+            char *left = pretty_stringify_node(node->le_op->left);
+            char *right = pretty_stringify_node(node->le_op->right);
+            asprintf(&bfr, "%s <= %s", left, right);
+            free(left);
+            free(right);
+            break;
+        }
+        case NODE_GE_OP: {
+            char *left = pretty_stringify_node(node->ge_op->left);
+            char *right = pretty_stringify_node(node->ge_op->right);
+            asprintf(&bfr, "%s >= %s", left, right);
+            free(left);
+            free(right);
+            break;
+        }
+        case NODE_LT_OP: {
+            char *left = pretty_stringify_node(node->lt_op->left);
+            char *right = pretty_stringify_node(node->lt_op->right);
+            asprintf(&bfr, "%s < %s", left, right);
+            free(left);
+            free(right);
+            break;
+        }
+        case NODE_GT_OP: {
+            char *left = pretty_stringify_node(node->gt_op->left);
+            char *right = pretty_stringify_node(node->gt_op->right);
+            asprintf(&bfr, "%s > %s", left, right);
+            free(left);
+            free(right);
+            break;
+        }
+        case NODE_PLUS_OP: {
+            char *left = pretty_stringify_node(node->plus_op->left);
+            char *right = pretty_stringify_node(node->plus_op->right);
+            asprintf(&bfr, "%s + %s", left, right);
+            free(left);
+            free(right);
+            break;
+        }
+        case NODE_MINUS_OP: {
+            char *left = pretty_stringify_node(node->minus_op->left);
+            char *right = pretty_stringify_node(node->minus_op->right);
+            asprintf(&bfr, "%s - %s", left, right);
+            free(left);
+            free(right);
+            break;
+        }
+        case NODE_MULT_OP: {
+            char *left = pretty_stringify_node(node->mult_op->left);
+            char *right = pretty_stringify_node(node->mult_op->right);
+            asprintf(&bfr, "%s * %s", left, right);
+            free(left);
+            free(right);
+            break;
+        }
+        case NODE_DIVIDE_OP: {
+            char *left = pretty_stringify_node(node->divide_op->left);
+            char *right = pretty_stringify_node(node->divide_op->right);
+            asprintf(&bfr, "%s / %s", left, right);
+            free(left);
+            free(right);
+            break;
+        }
+        case NODE_EMPTY: {
+            asprintf(&bfr, "()");
             break;
         }
     }
 
-    free(type);
     return bfr;
 }
 

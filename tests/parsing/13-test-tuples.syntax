@@ -1,0 +1,6 @@
+module Tests.Parsing.Test13 is
+
+let unused = (10, 20);
+let unused = (10, "Hello");
+let unused = ((30, "woo"), "waa");
+let unused = [("bob", 10), ("greg", 15)];

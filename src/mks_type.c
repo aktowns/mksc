@@ -5,7 +5,7 @@
 #include "utils/log_utils.h"
 #include "mks_type.h"
 
-mks_type_t *mk_type(mks_type_state state, mks_type_kind kind) {
+mks_type_t *mk_type(mks_type_state_t state, mks_type_kind_t kind) {
     mks_type_t *typ = malloc(sizeof(mks_type_t));
 
     typ->state = state;
@@ -144,6 +144,55 @@ char *pretty_stringify_type(mks_type_t *type) {
             asprintf(&bfr, "%sfunction%s<%s,%s>", RGB(255, 165, 20), ANSI_NORMAL, arg, ret);
             free(arg);
             free(ret);
+            break;
+        }
+        case TY_TUPLE: {
+            char *arg = pretty_stringify_type(type->value->tuple->one);
+            char *ret = pretty_stringify_type(type->value->tuple->two);
+            asprintf(&bfr, "%s(%s%s,%s%s)%s", RGB(100, 155, 200), ANSI_NORMAL, arg, ret, RGB(100, 155, 200), ANSI_NORMAL);
+            free(arg);
+            free(ret);
+            break;
+        }
+    }
+
+    return bfr;
+}
+
+char *prettify_type_resolution(mks_type_resolution_t resolution) {
+    char *bfr = NULL;
+
+    switch (resolution) {
+        case TY_STRING: {
+            asprintf(&bfr, "%sstring%s", RGB(100, 200, 100), ANSI_NORMAL);
+            break;
+        }
+        case TY_NUMBER: {
+            asprintf(&bfr, "%snumber%s", RGB(200, 100, 100), ANSI_NORMAL);
+            break;
+        }
+        case TY_ARRAY: {
+            asprintf(&bfr, "%sarray%s", RGB(150, 200, 50), ANSI_NORMAL);
+            break;
+        }
+        case TY_BOOL: {
+            asprintf(&bfr, "%sbool%s", RGB(200, 80, 240), ANSI_NORMAL);
+            break;
+        }
+        case TY_MODULE: {
+            asprintf(&bfr, "%smodule%s", RGB(80, 80, 240), ANSI_NORMAL);
+            break;
+        }
+        case TY_FUNCTION: {
+            asprintf(&bfr, "%sfunction%s<?,?>", RGB(255, 165, 20), ANSI_NORMAL);
+            break;
+        }
+        case TY_UNIT: {
+            asprintf(&bfr, "%sunit%s", RGB(200, 255, 200), ANSI_NORMAL);
+            break;
+        }
+        case TY_TUPLE: {
+            asprintf(&bfr, "%stuple%s", RGB(100, 155, 200), ANSI_NORMAL);
             break;
         }
     }

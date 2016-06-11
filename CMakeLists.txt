@@ -41,7 +41,8 @@ set(SYNTAX_TEST_FILES
         tests/parsing/09-test-strings.syntax
         tests/parsing/10-test-numbers.syntax
         tests/parsing/11-test-arrays.syntax
-        tests/parsing/12-test-comments.syntax)
+        tests/parsing/12-test-comments.syntax
+        tests/parsing/13-test-tuples.syntax)
 
 set(ENRICHMENT_TEST_FILES
         tests/inference/01-test-primitives.typed
