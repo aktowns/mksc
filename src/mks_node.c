@@ -95,6 +95,16 @@ mks_node_t *mk_number(int number) {
     return node;
 }
 
+mks_node_t *mk_array(mks_node_t* items) {
+    mks_node_t *node = mk_node(ARRAY_LITERAL);
+
+    mks_array_t *ary_node = malloc(sizeof(mks_array_t));
+    ary_node->items = items;
+    node->array = ary_node;
+
+    return node;
+}
+
 // WARN: this is a shallow copy
 mks_node_t *mk_sequence(mks_node_t *left, mks_node_t *right) {
     mks_node_t *node = mk_node(SEQUENCE);
@@ -285,6 +295,11 @@ void mks_free(mks_node_t *node) {
             free(node->string);
             free(node);
             return;
+        case ARRAY_LITERAL:
+            mks_free(node->array->items);
+            free(node->array);
+            free(node);
+            return;
         case SEQUENCE:
             mks_free(node->sequence->left);
             mks_free(node->sequence->right);
@@ -447,6 +462,12 @@ char *pretty_stringify_node(mks_node_t *node) {
         case STRING_LITERAL:
             asprintf(&bfr, "<string value=%s>", node->string->value);
             return bfr;
+        case ARRAY_LITERAL: {
+            char *items = pretty_stringify_node(node->array->items);
+            asprintf(&bfr, "<array items=%s>", items);
+            free(items);
+            return bfr;
+        }
         case SEQUENCE: {
             char *left = pretty_stringify_node(node->sequence->left);
             char *right = pretty_stringify_node(node->sequence->right);

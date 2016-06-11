@@ -13,6 +13,7 @@ typedef enum {
     IDENTIFIER,
     NUMBER_LITERAL,
     STRING_LITERAL,
+    ARRAY_LITERAL,
     SEQUENCE,
     ASSIGNMENT,
     IF,
@@ -46,6 +47,10 @@ typedef struct {
 typedef struct {
     char *value;
 } mks_string_t;
+
+typedef struct {
+    struct mks_node *items;
+} mks_array_t;
 
 typedef struct {
     struct mks_node *left;
@@ -137,6 +142,7 @@ struct mks_node {
         mks_identifier_t *identifier;
         mks_number_t *number;
         mks_string_t *string;
+        mks_array_t *array;
         mks_sequence_t *sequence;
         mks_assignment_t *assignment;
         mks_if_stmt_t *if_stmt;
@@ -177,6 +183,8 @@ mks_node_t *mk_identifier(char *value);
 mks_node_t *mk_string(char *identifier);
 
 mks_node_t *mk_number(int value);
+
+mks_node_t *mk_array(mks_node_t* items);
 
 mks_node_t *mk_sequence(mks_node_t *left, mks_node_t *right);
 

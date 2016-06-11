@@ -113,6 +113,7 @@ arglist(A) ::= arglist(B) COMMA expression(C). { A = mk_sequence(B, C); }
 
 literal(A) ::= NUMBER_LITERAL(B). { A = mk_number(B->number_value); }
 literal(A) ::= STRING_LITERAL(B). { A = mk_string(B->string_value); }
+literal(A) ::= LBRACK arglist(B) RBRACK. { A = mk_array(B); }
 
 identifier(A) ::= IDENTIFIER(B). { A = mk_identifier(B->string_value); }
 

@@ -4,3 +4,5 @@ let unused = hello[3];
 let unused = hello[5 + 5];
 let unused = hello[some_func(10)];
 let unused = hello[some_var[20]];
+
+let unused = [1, 2, 3];
