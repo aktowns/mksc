@@ -40,7 +40,8 @@ set(SYNTAX_TEST_FILES
         tests/parsing/08-test-mode-export.syntax
         tests/parsing/09-test-strings.syntax
         tests/parsing/10-test-numbers.syntax
-        tests/parsing/11-test-arrays.syntax)
+        tests/parsing/11-test-arrays.syntax
+        tests/parsing/12-test-comments.syntax)
 
 set(SOURCE_FILES
         src/main.c

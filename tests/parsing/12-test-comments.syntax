@@ -1,0 +1,13 @@
+module Tests.Parsing.Test12 is
+
+let unused = 10; -- woo
+
+let unused = (* hmmm *) 13;
+
+(*
+    This was a triumph, i'm making a note here
+    Huge success
+*)
+
+-- Blah
+-- \newdwd" ewdewdd(#*@(*F$WJDSda
