@@ -1,0 +1,9 @@
+module Tests.Inference.Test1 is
+
+let unused = 1; -- number
+
+let unused = "Hello"; -- string
+
+let unused = [1, 2, 3]; -- array<number>
+
+let unused = a; -- test unable to resolve

@@ -5,14 +5,14 @@
 #include "utils/ansi_colour.h"
 #include "utils/file_utils.h"
 
-void mks_token_iterate(token_t* token_top, token_iterate_cb cb) {
+void mks_token_iterate(token_t *token_top, token_iterate_cb cb) {
     do {
         cb(token_top);
     } while ((token_top = token_top->next) != NULL);
 }
 
-token_t* mk_token(int type, int line, int col) {
-    token_t* tok = malloc(sizeof(token_t));
+token_t *mk_token(int type, int line, int col) {
+    token_t *tok = malloc(sizeof(token_t));
     tok->type = type;
     tok->line_no = line;
     tok->column_no = col;
@@ -22,19 +22,20 @@ token_t* mk_token(int type, int line, int col) {
 }
 
 void token_free(token_t *token) {
-    switch(token->type) {
+    switch (token->type) {
         case TOKEN_IDENTIFIER:
         case TOKEN_SPECIAL_IDENTIFIER:
         case TOKEN_STRING_LITERAL:
             free(token->string_value);
             break;
-        default: break;
+        default:
+            break;
     }
     free(token);
 }
 
-void tokens_free(token_t* tokens) {
-    token_t* curr;
+void tokens_free(token_t *tokens) {
+    token_t *curr;
     while ((curr = tokens) != NULL) {
         tokens = tokens->next;
         token_free(curr);
@@ -115,7 +116,7 @@ const char *string_token(token_t *token) {
 
 void print_tokens(token_t *tokens) {
     printf("[ ");
-    mks_token_iterate(tokens, ^(token_t* token) {
+    mks_token_iterate(tokens, ^(token_t *token) {
         printf("%s(%i:%i) ", string_token(token), token->line_no, token->column_no);
     });
     printf("]\n");
@@ -127,7 +128,7 @@ void annotate_source(char *path, token_t *tokens) {
     iterate_file(path, ^(char *line, int lineno) {
         printf("%s%i%s: %s", ANSI_GREEN, lineno, ANSI_NORMAL, line);
         printf("%s%i%s: ", ANSI_BLUE, lineno, ANSI_NORMAL);
-        mks_token_iterate(tokens, ^(token_t* token) {
+        mks_token_iterate(tokens, ^(token_t *token) {
             if (token->line_no == lineno) {
                 printf("%s ", string_token(token));
             }

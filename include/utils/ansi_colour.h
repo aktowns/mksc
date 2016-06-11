@@ -1,7 +1,7 @@
 #ifndef __ANSI_COLOUR_H
 #define __ANSI_COLOUR_H
 
-#define RGB(r,g,b) "\e[38;2;" #r ";" #g ";" #b "m"
+#define RGB(r, g, b) "\e[38;2;" #r ";" #g ";" #b "m"
 
 #define ANSI_NORMAL "\x1B[0m"
 #define ANSI_RED "\x1B[31m"

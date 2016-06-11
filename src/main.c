@@ -1,11 +1,11 @@
 #include "mks_node.h"
 #include "mks_token.h"
+#include "mks_enrichment.h"
 #include "parser_exports.h"
 #include "utils/ansi_colour.h"
 #include "utils/file_utils.h"
 
 #include <unistd.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 int main(int argc, char **argv) {
@@ -14,6 +14,7 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
+    printf("mksc compiler 0.01 ashley towns <mail@ashleytowns.id.au>\n");
     char *contents = read_file(argv[1]);
 
 
@@ -27,18 +28,22 @@ int main(int argc, char **argv) {
     // ParseTrace(stdout, "* > ");
 
 
-    mks_token_iterate(tokens, ^(token_t* token) { Parse(parser, token->type, token, NULL); });
+    mks_token_iterate(tokens, ^(token_t *token) { Parse(parser, token->type, token, NULL); });
 
     mks_node_t *ast = NULL;
 
     Parse(parser, 0, NULL, &ast);
 
     if (ast != NULL && ast->is_ok) {
-        printf("%sAST%s: ", RGB(200, 200, 200), ANSI_NORMAL);
+        printf("%sAST%s: ", RGB(100, 200, 100), ANSI_NORMAL);
+        pretty_print_node(ast);
+        printf("\n");
+        printf("%sType enrichment%s: ", RGB(100, 100, 200), ANSI_NORMAL);
+        enrich_tree(ast);
         pretty_print_node(ast);
     }
 
-    mks_free(ast);
+    mks_free_node(ast);
     tokens_free(tokens);
     ParseFree(parser, free);
 

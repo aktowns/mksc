@@ -2,32 +2,33 @@
 #define __MKS_NODE_H
 
 #include <stdbool.h>
+#include "mks_type.h"
 
 struct mks_node;
 
 typedef enum {
-    MODULE,
-    IMPORT,
-    FUNCTION_CALL,
-    FUNCTION,
-    IDENTIFIER,
-    NUMBER_LITERAL,
-    STRING_LITERAL,
-    ARRAY_LITERAL,
-    SEQUENCE,
-    ASSIGNMENT,
-    IF,
-    EQ_OP,
-    NE_OP,
-    LT_OP,
-    GT_OP,
-    LE_OP,
-    GE_OP,
-    PLUS_OP,
-    MINUS_OP,
-    MULT_OP,
-    DIVIDE_OP,
-    EMPTY
+    NODE_MODULE,
+    NODE_IMPORT,
+    NODE_FUNCTION_CALL,
+    NODE_FUNCTION,
+    NODE_IDENTIFIER,
+    NODE_NUMBER_LITERAL,
+    NODE_STRING_LITERAL,
+    NODE_ARRAY_LITERAL,
+    NODE_SEQUENCE,
+    NODE_ASSIGNMENT,
+    NODE_IF,
+    NODE_EQ_OP,
+    NODE_NE_OP,
+    NODE_LT_OP,
+    NODE_GT_OP,
+    NODE_LE_OP,
+    NODE_GE_OP,
+    NODE_PLUS_OP,
+    NODE_MINUS_OP,
+    NODE_MULT_OP,
+    NODE_DIVIDE_OP,
+    NODE_EMPTY
 } mks_node_type;
 
 typedef struct {
@@ -137,6 +138,7 @@ typedef struct {
 struct mks_node {
     mks_node_type tag;
     bool is_ok;
+    mks_type_t *type;
 
     union {
         mks_identifier_t *identifier;
@@ -160,7 +162,7 @@ struct mks_node {
         mks_function_call_t *function_call;
         mks_function_t *function;
         mks_import_t *import;
-        char* error;
+        char *error;
     };
 };
 
@@ -168,9 +170,9 @@ typedef struct mks_node mks_node_t;
 
 mks_node_t *mk_node(mks_node_type tag);
 
-mks_node_t *mk_copy(mks_node_t* src);
+mks_node_t *mk_copy(mks_node_t *src);
 
-mks_node_t *mk_module(mks_node_t *identifier, mks_node_t *body, mks_node_t* exports);
+mks_node_t *mk_module(mks_node_t *identifier, mks_node_t *body, mks_node_t *exports);
 
 mks_node_t *mk_import(mks_node_t *name, mks_node_t *qualified, mks_node_t *specific);
 
@@ -184,7 +186,7 @@ mks_node_t *mk_string(char *identifier);
 
 mks_node_t *mk_number(int value);
 
-mks_node_t *mk_array(mks_node_t* items);
+mks_node_t *mk_array(mks_node_t *items);
 
 mks_node_t *mk_sequence(mks_node_t *left, mks_node_t *right);
 
@@ -212,7 +214,7 @@ mks_node_t *mk_mult_operator(mks_node_t *left, mks_node_t *right);
 
 mks_node_t *mk_divide_operator(mks_node_t *left, mks_node_t *right);
 
-void mks_free(mks_node_t *node);
+void mks_free_node(mks_node_t *node);
 
 char *pretty_stringify_node(mks_node_t *node);
 

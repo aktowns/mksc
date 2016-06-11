@@ -31,15 +31,15 @@
 %default_type { mks_node_t * }
 %extra_argument { mks_node_t **result }
 
-%destructor top { mks_free($$); }
-%destructor toplevelseq { mks_free($$); }
-%destructor statement { mks_free($$); }
-%destructor body { mks_free($$); }
-%destructor expression { mks_free($$); }
-%destructor bodyseq { mks_free($$); }
-%destructor literal { mks_free($$); }
-%destructor identifier { mks_free($$); }
-%destructor special_identifier { mks_free($$); }
+%destructor top { mks_free_node($$); }
+%destructor toplevelseq { mks_free_node($$); }
+%destructor statement { mks_free_node($$); }
+%destructor body { mks_free_node($$); }
+%destructor expression { mks_free_node($$); }
+%destructor bodyseq { mks_free_node($$); }
+%destructor literal { mks_free_node($$); }
+%destructor identifier { mks_free_node($$); }
+%destructor special_identifier { mks_free_node($$); }
 
 %type top { mks_node_t * }
 %start_symbol top
@@ -50,7 +50,7 @@
 %nonassoc EQ NE GT GE LT LE.
 
 top ::= MODULE special_identifier(B) IS toplevelseq(C) SEPERATOR. {
-    mks_node_t* res = mk_module(B, C, mk_node(EMPTY));
+    mks_node_t* res = mk_module(B, C, mk_node(NODE_EMPTY));
     res->is_ok = is_ok;
     *result = res;
 }
@@ -70,10 +70,10 @@ statement(A) ::= LET identifier(B) LPAREN arglist(C) RPAREN ASSIGN expression(D)
 statement(A) ::= LET identifier(B) LPAREN arglist(C) RPAREN ASSIGN DO bodyseq(D) SEPERATOR OD.
 { A = mk_assignment(B, mk_function(C, D)); }
 
-statement(A) ::= IMPORT special_identifier(B). { A = mk_import(B, mk_node(EMPTY), mk_node(EMPTY)); }
-statement(A) ::= IMPORT special_identifier(B) LPAREN arglist(C) RPAREN. { A = mk_import(B, mk_node(EMPTY), C); }
+statement(A) ::= IMPORT special_identifier(B). { A = mk_import(B, mk_node(NODE_EMPTY), mk_node(NODE_EMPTY)); }
+statement(A) ::= IMPORT special_identifier(B) LPAREN arglist(C) RPAREN. { A = mk_import(B, mk_node(NODE_EMPTY), C); }
 
-statement(A) ::= IMPORT special_identifier(B) AS special_identifier(C). { A = mk_import(B, C, mk_node(EMPTY)); }
+statement(A) ::= IMPORT special_identifier(B) AS special_identifier(C). { A = mk_import(B, C, mk_node(NODE_EMPTY)); }
 statement(A) ::= IMPORT special_identifier(B) LPAREN arglist(D) RPAREN AS special_identifier(C).
 { A = mk_import(B, C, D); }
 

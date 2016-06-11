@@ -12,7 +12,7 @@ set(CMAKE_NM      "/usr/bin/llvm-nm")
 set(CMAKE_OBJDUMP "/usr/bin/llvm-objdump")
 set(CMAKE_RANLIB  "/usr/bin/llvm-ranlib")
 
-set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -g -O1 -Werror -Wall -std=gnu11 -fsanitize=address -fblocks -fno-omit-frame-pointer")
+set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -g -O1 -Werror -Wall -std=gnu11 -fsanitize=address -fsanitize=undefined -fsanitize-coverage=func -fblocks -fno-omit-frame-pointer -fno-optimize-sibling-calls -fno-common")
 set(CMAKE_C_FLAGS_DEBUG "-g")
 
 add_definitions(-D_GNU_SOURCE=1)
@@ -43,10 +43,15 @@ set(SYNTAX_TEST_FILES
         tests/parsing/11-test-arrays.syntax
         tests/parsing/12-test-comments.syntax)
 
+set(ENRICHMENT_TEST_FILES
+        tests/inference/01-test-primitives.typed)
+
 set(SOURCE_FILES
         src/main.c
         src/mks_node.c
         src/mks_token.c
+        src/mks_type.c
+        src/mks_enrichment.c
         src/utils/file_utils.c
         src/utils/string_utils.c
         src/utils/memory_utils.c
@@ -58,6 +63,8 @@ set(SOURCE_FILES
 
         include/mks_node.h
         include/mks_token.h
+        include/mks_type.h
+        include/mks_enrichment.h
         include/parser_exports.h
         include/utils/ansi_colour.h
         include/utils/file_utils.h
@@ -65,7 +72,8 @@ set(SOURCE_FILES
         include/utils/memory_utils.h
         include/utils/string_utils.h
 
-        ${SYNTAX_TEST_FILES})
+        ${SYNTAX_TEST_FILES}
+        ${ENRICHMENT_TEST_FILES})
 
 add_executable(mksc ${SOURCE_FILES})
 
