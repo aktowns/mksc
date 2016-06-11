@@ -44,7 +44,8 @@ set(SYNTAX_TEST_FILES
         tests/parsing/12-test-comments.syntax)
 
 set(ENRICHMENT_TEST_FILES
-        tests/inference/01-test-primitives.typed)
+        tests/inference/01-test-primitives.typed
+        tests/inference/02-test-functions-curry.typed)
 
 set(SOURCE_FILES
         src/main.c
@@ -55,6 +56,7 @@ set(SOURCE_FILES
         src/utils/file_utils.c
         src/utils/string_utils.c
         src/utils/memory_utils.c
+        src/utils/node_list.c
         ${RAGEL_lexer_OUTPUTS}
         ${LEMON_parser_SOURCE_OUTPUT}
 
@@ -70,6 +72,7 @@ set(SOURCE_FILES
         include/utils/file_utils.h
         include/utils/log_utils.h
         include/utils/memory_utils.h
+        include/utils/node_list.h
         include/utils/string_utils.h
 
         ${SYNTAX_TEST_FILES}

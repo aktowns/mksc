@@ -37,6 +37,8 @@
 %destructor body { mks_free_node($$); }
 %destructor expression { mks_free_node($$); }
 %destructor bodyseq { mks_free_node($$); }
+%destructor identlist { mks_free_node($$); }
+%destructor arglist { mks_free_node($$); }
 %destructor literal { mks_free_node($$); }
 %destructor identifier { mks_free_node($$); }
 %destructor special_identifier { mks_free_node($$); }
@@ -65,16 +67,19 @@ toplevelseq(A) ::= statement(B). { A = B; }
 
 statement(A) ::= LET identifier(B) ASSIGN expression(C). { A = mk_assignment(B, C); }
 statement(A) ::= LET identifier(B) ASSIGN DO bodyseq(C) SEPARATOR OD. { A = mk_assignment(B, C); }
-statement(A) ::= LET identifier(B) LPAREN arglist(C) RPAREN ASSIGN expression(D).
-{ A = mk_assignment(B, mk_function(C, D)); }
-statement(A) ::= LET identifier(B) LPAREN arglist(C) RPAREN ASSIGN DO bodyseq(D) SEPARATOR OD.
-{ A = mk_assignment(B, mk_function(C, D)); }
+
+statement(A) ::= LET identifier(B) LPAREN identlist(C) RPAREN ASSIGN expression(D). {
+    A = mk_assignment(B, mk_sequence_to_function(C, D));
+}
+statement(A) ::= LET identifier(B) LPAREN identlist(C) RPAREN ASSIGN DO bodyseq(D) SEPARATOR OD. {
+    A = mk_assignment(B, mk_sequence_to_function(C, D));
+}
 
 statement(A) ::= IMPORT special_identifier(B). { A = mk_import(B, mk_node(NODE_EMPTY), mk_node(NODE_EMPTY)); }
-statement(A) ::= IMPORT special_identifier(B) LPAREN arglist(C) RPAREN. { A = mk_import(B, mk_node(NODE_EMPTY), C); }
+statement(A) ::= IMPORT special_identifier(B) LPAREN identlist(C) RPAREN. { A = mk_import(B, mk_node(NODE_EMPTY), C); }
 
 statement(A) ::= IMPORT special_identifier(B) AS special_identifier(C). { A = mk_import(B, C, mk_node(NODE_EMPTY)); }
-statement(A) ::= IMPORT special_identifier(B) LPAREN arglist(D) RPAREN AS special_identifier(C).
+statement(A) ::= IMPORT special_identifier(B) LPAREN identlist(D) RPAREN AS special_identifier(C).
 { A = mk_import(B, C, D); }
 
 body(A) ::= statement(B). { A = B; }
@@ -107,6 +112,9 @@ expression(A) ::= LPAREN expression(B) RPAREN. { A = B; }
 expression(A) ::= literal(B). { A = B; }
 expression(A) ::= identifier(B). { A = B; }
 expression(A) ::= identifier_index(B). { A = B; }
+
+identlist(A) ::= identifier(B). { A = B; }
+identlist(A) ::= identlist(B) COMMA identifier(C). { A = mk_sequence(B, C); }
 
 arglist(A) ::= expression(B). { A = B; }
 arglist(A) ::= arglist(B) COMMA expression(C). { A = mk_sequence(B, C); }

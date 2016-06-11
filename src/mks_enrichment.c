@@ -1,6 +1,7 @@
 #include "mks_node.h"
 #include <stdio.h>
 #include <mks_node.h>
+#include <mks_type.h>
 
 void enrich_tree(mks_node_t *tree) {
     if (tree->type->state == RESOLVED) {
@@ -24,10 +25,11 @@ void enrich_tree(mks_node_t *tree) {
         case NODE_ARRAY_LITERAL: {
             enrich_tree(tree->array->items);
 
-            mks_copy_type(tree->array->items->type, tree->type->contained_type);
+            mks_copy_type(tree->array->items->type, tree->type->value->single);
 
             tree->type->resolved_type = TY_ARRAY;
             tree->type->state = RESOLVED;
+            tree->type->kind = UNARY;
             break;
         }
         case NODE_MODULE:
@@ -60,11 +62,33 @@ void enrich_tree(mks_node_t *tree) {
 
             break;
         case NODE_IMPORT:
+            enrich_tree(tree->import->name);
+            enrich_tree(tree->import->qualified);
+            enrich_tree(tree->import->specific);
+
+            tree->import->name->type->resolved_type = TY_MODULE;
+            tree->import->name->type->state = RESOLVED;
+
             tree->type->resolved_type = TY_MODULE;
             tree->type->state = RESOLVED;
             break;
-        case NODE_FUNCTION_CALL:break;
-        case NODE_FUNCTION:break;
+        case NODE_FUNCTION_CALL:
+            enrich_tree(tree->function_call->name);
+            enrich_tree(tree->function_call->arguments);
+
+            break;
+        case NODE_FUNCTION:
+            enrich_tree(tree->function->argument);
+            enrich_tree(tree->function->body);
+
+            tree->type->resolved_type = TY_FUNCTION;
+            tree->type->state = RESOLVED;
+            tree->type->kind = BINARY;
+
+            mks_copy_type(tree->function->argument->type, tree->type->value->tuple->one);
+            mks_copy_type(tree->function->body->type, tree->type->value->tuple->two);
+
+            break;
         case NODE_IF:
             enrich_tree(tree->if_stmt->condition);
             enrich_tree(tree->if_stmt->true_body);
@@ -119,8 +143,19 @@ void enrich_tree(mks_node_t *tree) {
             enrich_tree(tree->plus_op->left);
             enrich_tree(tree->plus_op->right);
 
+            if (tree->plus_op->right->type->state == RESOLVED &&
+                    tree->plus_op->left->type->state == UNRESOLVED) {
+                mks_copy_type(tree->plus_op->right->type, tree->plus_op->left->type);
+            }
+
+            if (tree->plus_op->right->type->state == UNRESOLVED &&
+                tree->plus_op->left->type->state == RESOLVED) {
+                mks_copy_type(tree->plus_op->left->type, tree->plus_op->right->type);
+            }
+            
             tree->type->resolved_type = TY_NUMBER;
             tree->type->state = RESOLVED;
+
             break;
         case NODE_MINUS_OP:
             enrich_tree(tree->minus_op->left);

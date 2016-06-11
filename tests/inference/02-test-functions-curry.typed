@@ -1,0 +1,4 @@
+module Tests.Inference.Test2 is
+
+let add(x, y) = x + y; -- function
+let zee(a, b, c, d) = a + b + c + d;

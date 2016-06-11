@@ -2,6 +2,7 @@
 #define __MKS_NODE_H
 
 #include <stdbool.h>
+#include <unistring/stdbool.h>
 #include "mks_type.h"
 
 struct mks_node;
@@ -125,7 +126,7 @@ typedef struct {
 } mks_function_call_t;
 
 typedef struct {
-    struct mks_node *arguments;
+    struct mks_node *argument;
     struct mks_node *body;
 } mks_function_t;
 
@@ -213,6 +214,8 @@ mks_node_t *mk_minus_operator(mks_node_t *left, mks_node_t *right);
 mks_node_t *mk_mult_operator(mks_node_t *left, mks_node_t *right);
 
 mks_node_t *mk_divide_operator(mks_node_t *left, mks_node_t *right);
+
+mks_node_t *mk_sequence_to_function(mks_node_t *arg, mks_node_t *ret);
 
 void mks_free_node(mks_node_t *node);
 
