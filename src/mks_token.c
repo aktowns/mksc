@@ -60,8 +60,8 @@ const char *string_token(token_t *token) {
             return "STRING";
         case TOKEN_PLUS:
             return "PLUS";
-        case TOKEN_SEPERATOR:
-            return "SEPERATOR";
+        case TOKEN_SEPARATOR:
+            return "SEPARATOR";
         case TOKEN_ASSIGN:
             return "ASSIGN";
         case TOKEN_LPAREN:

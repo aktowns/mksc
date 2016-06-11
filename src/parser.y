@@ -49,25 +49,25 @@
 
 %nonassoc EQ NE GT GE LT LE.
 
-top ::= MODULE special_identifier(B) IS toplevelseq(C) SEPERATOR. {
+top ::= MODULE special_identifier(B) IS toplevelseq(C) SEPARATOR. {
     mks_node_t* res = mk_module(B, C, mk_node(NODE_EMPTY));
     res->is_ok = is_ok;
     *result = res;
 }
-top ::= MODULE special_identifier(B) LPAREN arglist(D) RPAREN IS toplevelseq(C) SEPERATOR. {
+top ::= MODULE special_identifier(B) LPAREN arglist(D) RPAREN IS toplevelseq(C) SEPARATOR. {
     mks_node_t* res = mk_module(B, C, D);
     res->is_ok = is_ok;
     *result = res;
 }
 
-toplevelseq(A) ::= toplevelseq(B) SEPERATOR statement(C). { A = mk_sequence(B, C); }
+toplevelseq(A) ::= toplevelseq(B) SEPARATOR statement(C). { A = mk_sequence(B, C); }
 toplevelseq(A) ::= statement(B). { A = B; }
 
 statement(A) ::= LET identifier(B) ASSIGN expression(C). { A = mk_assignment(B, C); }
-statement(A) ::= LET identifier(B) ASSIGN DO bodyseq(C) SEPERATOR OD. { A = mk_assignment(B, C); }
+statement(A) ::= LET identifier(B) ASSIGN DO bodyseq(C) SEPARATOR OD. { A = mk_assignment(B, C); }
 statement(A) ::= LET identifier(B) LPAREN arglist(C) RPAREN ASSIGN expression(D).
 { A = mk_assignment(B, mk_function(C, D)); }
-statement(A) ::= LET identifier(B) LPAREN arglist(C) RPAREN ASSIGN DO bodyseq(D) SEPERATOR OD.
+statement(A) ::= LET identifier(B) LPAREN arglist(C) RPAREN ASSIGN DO bodyseq(D) SEPARATOR OD.
 { A = mk_assignment(B, mk_function(C, D)); }
 
 statement(A) ::= IMPORT special_identifier(B). { A = mk_import(B, mk_node(NODE_EMPTY), mk_node(NODE_EMPTY)); }
@@ -80,14 +80,14 @@ statement(A) ::= IMPORT special_identifier(B) LPAREN arglist(D) RPAREN AS specia
 body(A) ::= statement(B). { A = B; }
 body(A) ::= expression(B). { A = B; }
 
-bodyseq(A) ::= bodyseq(B) SEPERATOR body(C). { A = mk_sequence(B, C); }
+bodyseq(A) ::= bodyseq(B) SEPARATOR body(C). { A = mk_sequence(B, C); }
 bodyseq(A) ::= body(B). { A = B; }
 
 // gah im doing this wrong.
 expression(A) ::= IF expression(B) THEN expression(C) ELSE expression(D) FI. { A = mk_if_expr(B, C, D); }
-expression(A) ::= IF expression(B) THEN expression(C) ELSE bodyseq(D) SEPERATOR FI. { A = mk_if_expr(B, C, D); }
-expression(A) ::= IF expression(B) THEN bodyseq(C) SEPERATOR ELSE bodyseq(D) SEPERATOR FI. { A = mk_if_expr(B, C, D); }
-expression(A) ::= IF expression(B) THEN bodyseq(C) SEPERATOR ELSE expression(D) FI. { A = mk_if_expr(B, C, D); }
+expression(A) ::= IF expression(B) THEN expression(C) ELSE bodyseq(D) SEPARATOR FI. { A = mk_if_expr(B, C, D); }
+expression(A) ::= IF expression(B) THEN bodyseq(C) SEPARATOR ELSE bodyseq(D) SEPARATOR FI. { A = mk_if_expr(B, C, D); }
+expression(A) ::= IF expression(B) THEN bodyseq(C) SEPARATOR ELSE expression(D) FI. { A = mk_if_expr(B, C, D); }
 
 expression(A) ::= expression(B) EQ expression(C). { A = mk_eq_operator(B, C); }
 expression(A) ::= expression(B) NE expression(C). { A = mk_ne_operator(B, C); }

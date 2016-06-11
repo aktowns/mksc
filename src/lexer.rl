@@ -24,7 +24,7 @@
 
     main := |*
         '='              => { TOKEN(TOKEN_ASSIGN); };
-        ';'+             => { TOKEN(TOKEN_SEPERATOR); };
+        ';'+             => { TOKEN(TOKEN_SEPARATOR); };
         '=='             => { TOKEN(TOKEN_EQ); };
         '!='             => { TOKEN(TOKEN_NE); };
         '<'              => { TOKEN(TOKEN_LT); };
