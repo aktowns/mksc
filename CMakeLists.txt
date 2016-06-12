@@ -12,8 +12,24 @@ set(CMAKE_NM      "/usr/bin/llvm-nm")
 set(CMAKE_OBJDUMP "/usr/bin/llvm-objdump")
 set(CMAKE_RANLIB  "/usr/bin/llvm-ranlib")
 
-set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -g -O1 -Werror -Wall -std=gnu11 -fsanitize=address -fsanitize=undefined -fsanitize-coverage=func -fblocks -fno-omit-frame-pointer -fno-optimize-sibling-calls -fno-common")
+find_package(PkgConfig)
+pkg_check_modules (UNWIND REQUIRED libunwind)
+
+find_package(LLVM 3.9 REQUIRED all-targets analysis asmparser asmprinter bitreader bitwriter codegen core debuginfocodeview
+        debuginfodwarf debuginfopdb globalisel instcombine ipa ipo instrumentation irreader linker lto mc mcdisassembler
+        mcparser objcarcopts object option profiledata scalaropts selectiondag support tablegen target transformutils
+        vectorize)
+
+string(REGEX REPLACE "-DNDEBUG" "" LLVM_CFLAGS ${LLVM_CFLAGS})
+string(REGEX REPLACE "-pedantic" "" LLVM_CFLAGS ${LLVM_CFLAGS})
+
+set(DEBUGGING "-g -O1 -fsanitize=address -fsanitize=undefined -fsanitize-coverage=func -fno-omit-frame-pointer -fno-optimize-sibling-calls")
+set(CMAKE_C_FLAGS ${CMAKE_CXX_FLAGS} "-Werror -Wall -std=gnu11 -fblocks ${LLVM_CFLAGS} ${UNWIND_CFLAGS} ${DEBUGGING}")
 set(CMAKE_C_FLAGS_DEBUG "-g")
+
+find_file(UTHashHeader uthash.h HINTS /usr/include/)
+get_filename_component(UTHash_Include ${UTHashHeader} DIRECTORY)
+include_directories(UTHash_Include)
 
 add_definitions(-D_GNU_SOURCE=1)
 
@@ -54,6 +70,7 @@ set(SOURCE_FILES
         src/mks_token.c
         src/mks_type.c
         src/mks_enrichment.c
+        src/codegen/module_codegen.c
         src/utils/file_utils.c
         src/utils/string_utils.c
         src/utils/memory_utils.c
@@ -69,6 +86,7 @@ set(SOURCE_FILES
         include/mks_type.h
         include/mks_enrichment.h
         include/parser_exports.h
+        include/codegen/module_codegen.h
         include/utils/ansi_colour.h
         include/utils/file_utils.h
         include/utils/log_utils.h
@@ -80,6 +98,10 @@ set(SOURCE_FILES
         ${ENRICHMENT_TEST_FILES})
 
 add_executable(mksc ${SOURCE_FILES})
+target_include_directories(mksc PUBLIC ${LLVM_INCLUDE_DIRS})
+target_include_directories(mksc PUBLIC ${UNWIND_INCLUDE_DIRS})
+target_link_libraries(mksc ${LLVM_LIBRARIES} ${LLVM_LDFLAGS})
+target_link_libraries(mksc ${UNWIND_LIBRARIES})
 
 ## Compile and link blocksruntime
 add_library(blocksruntime STATIC

@@ -41,6 +41,8 @@
         'import'         => { TOKEN(TOKEN_IMPORT); };
         'is'             => { TOKEN(TOKEN_IS); };
         'as'             => { TOKEN(TOKEN_AS); };
+        'true'           => { TOKEN(TOKEN_TRUE); };
+        'false'          => { TOKEN(TOKEN_FALSE); };
         'let'            => { TOKEN(TOKEN_LET); };
         'if'             => { TOKEN(TOKEN_IF); };
         'then'           => { TOKEN(TOKEN_THEN); };

@@ -9,6 +9,7 @@
 #include <stdlib.h>
 
 int main(int argc, char **argv) {
+    // emit_module();
     if ((argc < 2) || access(argv[1], F_OK) == -1) {
         printf("usage: %s <filename>\n", argv[0]);
         exit(-1);
@@ -23,10 +24,9 @@ int main(int argc, char **argv) {
     //print_tokens(tokens);
     annotate_source(argv[1], tokens);
 
-    void *parser = ParseAlloc(malloc);
+    void *parser = ParseAlloc((void *) malloc);
 
     // ParseTrace(stdout, "* > ");
-
 
     mks_token_iterate(tokens, ^(token_t *token) { Parse(parser, token->type, token, NULL); });
 
@@ -45,8 +45,7 @@ int main(int argc, char **argv) {
 
     mks_free_node(ast);
     tokens_free(tokens);
-    ParseFree(parser, free);
-
+    ParseFree(parser, (void *) free);
 
     free(contents);
 

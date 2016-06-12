@@ -5,13 +5,12 @@
 
 typedef struct nodelist {
     mks_node_t *node;
-    struct nodelist *previous;
-    struct nodelist *next;
+    struct nodelist *next, *prev;
 } node_list_t;
 
 typedef void (^node_list_iterate_cb)(node_list_t *);
 
-node_list_t* mk_seq_to_list(mks_node_t* seq, node_list_t *c, node_list_t *t, bool free_seq);
+void mk_seq_to_list(mks_node_t *seq, node_list_t **dest, bool free_seq);
 
 void node_list_iterate(node_list_t *list_top, node_list_iterate_cb cb);
 

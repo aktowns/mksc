@@ -3,6 +3,7 @@
     #include <stdio.h>
     #include <assert.h>
     #include <stdbool.h>
+    #include <string.h>
 
     #include "mks_node.h"
     #include "mks_token.h"
@@ -94,17 +95,17 @@ expression(A) ::= IF expression(B) THEN expression(C) ELSE bodyseq(D) SEPARATOR 
 expression(A) ::= IF expression(B) THEN bodyseq(C) SEPARATOR ELSE bodyseq(D) SEPARATOR FI. { A = mk_if_expr(B, C, D); }
 expression(A) ::= IF expression(B) THEN bodyseq(C) SEPARATOR ELSE expression(D) FI. { A = mk_if_expr(B, C, D); }
 
-expression(A) ::= expression(B) EQ expression(C). { A = mk_eq_operator(B, C); }
-expression(A) ::= expression(B) NE expression(C). { A = mk_ne_operator(B, C); }
-expression(A) ::= expression(B) LT expression(C). { A = mk_lt_operator(B, C); }
-expression(A) ::= expression(B) LE expression(C). { A = mk_le_operator(B, C); }
-expression(A) ::= expression(B) GT expression(C). { A = mk_gt_operator(B, C); }
-expression(A) ::= expression(B) GE expression(C). { A = mk_ge_operator(B, C); }
+expression(A) ::= expression(B) EQ expression(C). { A = mk_operator(B, C, OP_EQ); }
+expression(A) ::= expression(B) NE expression(C). { A = mk_operator(B, C, OP_NE); }
+expression(A) ::= expression(B) LT expression(C). { A = mk_operator(B, C, OP_LT); }
+expression(A) ::= expression(B) LE expression(C). { A = mk_operator(B, C, OP_LE); }
+expression(A) ::= expression(B) GT expression(C). { A = mk_operator(B, C, OP_GT); }
+expression(A) ::= expression(B) GE expression(C). { A = mk_operator(B, C, OP_GE); }
 
-expression(A) ::= expression(B) PLUS expression(C). { A = mk_plus_operator(B, C); }
-expression(A) ::= expression(B) MINUS expression(C). { A = mk_minus_operator(B, C); }
-expression(A) ::= expression(B) MULT expression(C). { A = mk_mult_operator(B, C); }
-expression(A) ::= expression(B) DIVIDE expression(C). { A = mk_divide_operator(B, C); }
+expression(A) ::= expression(B) PLUS expression(C). { A = mk_operator(B, C, OP_PLUS); }
+expression(A) ::= expression(B) MINUS expression(C). { A = mk_operator(B, C, OP_MINUS); }
+expression(A) ::= expression(B) MULT expression(C). { A = mk_operator(B, C, OP_MULT); }
+expression(A) ::= expression(B) DIVIDE expression(C). { A = mk_operator(B, C, OP_DIVIDE); }
 
 expression(A) ::= identifier(B) LPAREN arglist(C) RPAREN. { A = mk_function_call(B, C); }
 expression(A) ::= LPAREN expression(B) RPAREN. { A = B; }
@@ -123,10 +124,12 @@ literal(A) ::= NUMBER_LITERAL(B). { A = mk_number(B->number_value); }
 literal(A) ::= STRING_LITERAL(B). { A = mk_string(B->string_value); }
 literal(A) ::= LBRACK arglist(B) RBRACK. { A = mk_array(B); }
 literal(A) ::= LPAREN expression(B) COMMA expression(C) RPAREN. { A = mk_tuple(B, C); }
+literal(A) ::= TRUE. { A = mk_boolean(true); }
+literal(A) ::= FALSE. { A = mk_boolean(false); }
 
 identifier(A) ::= IDENTIFIER(B). { A = mk_identifier(B->string_value); }
 
 identifier_index(A) ::= IDENTIFIER(B) LBRACK expression(C) RBRACK.
-{ A = mk_function_call(mk_identifier("array_index"), mk_sequence(mk_identifier(B->string_value), C)); }
+{ A = mk_function_call(mk_identifier(strdup("array_index")), mk_sequence(mk_identifier(B->string_value), C)); }
 
 special_identifier(A) ::= SPECIAL_IDENTIFIER(B). { A = mk_identifier(B->string_value); }

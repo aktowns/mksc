@@ -1,12 +1,27 @@
-#include "mks_node.h"
+// mks_enrichment.c
+// Copyright (C) 2016 Ashley Towns
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 #include <stdio.h>
-#include <mks_node.h>
-#include <mks_type.h>
 #include <stdlib.h>
-#include "utils/log_utils.h"
+#include <mks_node.h>
+
+#include "mks_node.h"
 #include "mks_enrichment.h"
 
-static inline void _assert_type(mks_node_t* src, mks_type_resolution_t typ, const char* file, int line) {
+static inline void _assert_type(mks_node_t *src, mks_type_resolution_t typ, const char *file, int line) {
     if (src->type->resolved_type != typ) {
         char *type = prettify_type_resolution(typ);
         char *node = pretty_stringify_value(src);
@@ -23,7 +38,19 @@ static inline void _assert_type(mks_node_t* src, mks_type_resolution_t typ, cons
 
 #define assert_type(src, typ) _assert_type(src, typ, __FILE__, __LINE__)
 
-void enrich_number_op(mks_operator_t* op) {
+void set_type(mks_node_t **node, mks_type_resolution_t res, mks_type_state_t state) {
+    if ((*node)->type->state == RESOLVED) {
+        printf("Cowarding refusing to override type for:\n");
+        pretty_print_node(*node);
+        printf("\n\n");
+        return;
+    }
+
+    (*node)->type->resolved_type = res;
+    (*node)->type->state = state;
+}
+
+void enrich_number_op(mks_operator_t *op) {
     enrich_tree(op->left);
     enrich_tree(op->right);
 
@@ -37,12 +64,10 @@ void enrich_number_op(mks_operator_t* op) {
     // at this point we may not know what left OR right are, since we're using + which is hardcoded at the moment
     // we're going to force realisation of number on both sides for identifiers, otherwise type error.
     if (op->right->type->state == UNRESOLVED && op->right->tag == NODE_IDENTIFIER)
-        op->right->type->resolved_type = TY_NUMBER;
+        set_type(&(op->right), TY_NUMBER, RESOLVED);
     if (op->left->type->state == UNRESOLVED && op->left->tag == NODE_IDENTIFIER)
-        op->left->type->resolved_type = TY_NUMBER;
-
+        set_type(&(op->left), TY_NUMBER, RESOLVED);
 }
-
 
 void enrich_tree(mks_node_t *tree) {
     if (tree->type->state == RESOLVED) {
@@ -54,14 +79,13 @@ void enrich_tree(mks_node_t *tree) {
         case NODE_IDENTIFIER:
             break;
         case NODE_NUMBER_LITERAL:
-            tree->type->resolved_type = TY_NUMBER;
-            tree->type->state = RESOLVED;
-
+            set_type(&tree, TY_NUMBER, RESOLVED);
             break;
         case NODE_STRING_LITERAL:
-            tree->type->resolved_type = TY_STRING;
-            tree->type->state = RESOLVED;
-
+            set_type(&tree, TY_STRING, RESOLVED);
+            break;
+        case NODE_BOOL:
+            set_type(&tree, TY_BOOL, RESOLVED);
             break;
         case NODE_ARRAY_LITERAL: {
             enrich_tree(tree->array->items);
@@ -70,22 +94,15 @@ void enrich_tree(mks_node_t *tree) {
 
             // TODO: type check all elements are the same.
 
-            tree->type->resolved_type = TY_ARRAY;
-            tree->type->state = RESOLVED;
+            set_type(&tree, TY_ARRAY, RESOLVED);
             tree->type->kind = UNARY;
             break;
         }
         case NODE_MODULE:
             enrich_tree(tree->module->body);
 
-            tree->type->resolved_type = TY_MODULE;
-            tree->type->state = RESOLVED;
-
-            tree->module->name->type->resolved_type = TY_MODULE;
-            tree->module->name->type->state = RESOLVED;
-
-            tree->module->body->type->resolved_type = TY_UNIT;
-            tree->module->body->type->state = RESOLVED;
+            set_type(&tree, TY_MODULE, RESOLVED);
+            set_type(&(tree->module->name), TY_MODULE, RESOLVED);
 
             break;
         case NODE_SEQUENCE:
@@ -94,7 +111,6 @@ void enrich_tree(mks_node_t *tree) {
 
             // last field in sequence is the return type
             mks_copy_type(tree->sequence->right->type, tree->type);
-
             break;
         case NODE_TUPLE:
             enrich_tree(tree->tuple->one);
@@ -103,39 +119,31 @@ void enrich_tree(mks_node_t *tree) {
             mks_copy_type(tree->tuple->one->type, tree->type->value->tuple->one);
             mks_copy_type(tree->tuple->two->type, tree->type->value->tuple->two);
 
-            tree->type->resolved_type = TY_TUPLE;
-            tree->type->state = RESOLVED;
+            set_type(&tree, TY_TUPLE, RESOLVED);
             break;
         case NODE_ASSIGNMENT:
             enrich_tree(tree->assignment->value);
-            enrich_tree(tree->assignment->identifier);
 
-            mks_copy_type(tree->assignment->value->type, tree->assignment->identifier->type);
+            mks_copy_type(tree->assignment->value->type, tree->assignment->name->type);
             mks_copy_type(tree->assignment->value->type, tree->type);
-
             break;
         case NODE_IMPORT:
             enrich_tree(tree->import->name);
             enrich_tree(tree->import->qualified);
             enrich_tree(tree->import->specific);
 
-            tree->import->name->type->resolved_type = TY_MODULE;
-            tree->import->name->type->state = RESOLVED;
-
-            tree->type->resolved_type = TY_MODULE;
-            tree->type->state = RESOLVED;
+            set_type(&(tree->import->name), TY_MODULE, RESOLVED);
+            set_type(&tree, TY_MODULE, RESOLVED);
             break;
         case NODE_FUNCTION_CALL:
             enrich_tree(tree->function_call->name);
             enrich_tree(tree->function_call->arguments);
-
             break;
         case NODE_FUNCTION:
             enrich_tree(tree->function->argument);
             enrich_tree(tree->function->body);
 
-            tree->type->resolved_type = TY_FUNCTION;
-            tree->type->state = RESOLVED;
+            set_type(&tree, TY_FUNCTION, RESOLVED);
             tree->type->kind = BINARY;
 
             mks_copy_type(tree->function->argument->type, tree->type->value->tuple->one);
@@ -152,106 +160,45 @@ void enrich_tree(mks_node_t *tree) {
             assert_type(tree->if_stmt->false_body, tree->if_stmt->true_body->type->resolved_type);
 
             mks_copy_type(tree->if_stmt->true_body->type, tree->type);
-
             break;
-        case NODE_EQ_OP:
-            enrich_tree(tree->eq_op->left);
-            enrich_tree(tree->eq_op->right);
+        case NODE_OPERATOR: {
+            switch (tree->operator->op_type) {
+                case OP_EQ:
+                case OP_NE:
+                    enrich_tree(tree->operator->left);
+                    enrich_tree(tree->operator->right);
 
-            tree->type->resolved_type = TY_BOOL;
-            tree->type->state = RESOLVED;
+                    set_type(&tree, TY_BOOL, RESOLVED);
+                    break;
+                case OP_LT:
+                case OP_GT:
+                case OP_LE:
+                case OP_GE:
+                    enrich_number_op(tree->operator);
+
+                    // if we hit this, identifiers have realised to another value or you're using non-number literals.
+                    assert_type(tree->operator->left, TY_NUMBER);
+                    assert_type(tree->operator->right, TY_NUMBER);
+
+                    set_type(&tree, TY_BOOL, RESOLVED);
+                    break;
+                case OP_PLUS:
+                case OP_MINUS:
+                case OP_MULT:
+                case OP_DIVIDE:
+                    enrich_number_op(tree->operator);
+
+                    // if we hit this, identifiers have realised to another value or you're using non-number literals.
+                    assert_type(tree->operator->left, TY_NUMBER);
+                    assert_type(tree->operator->right, TY_NUMBER);
+
+                    set_type(&tree, TY_NUMBER, RESOLVED);
+                    break;
+            }
             break;
-        case NODE_NE_OP:
-            enrich_tree(tree->ne_op->left);
-            enrich_tree(tree->ne_op->right);
-
-            tree->type->resolved_type = TY_BOOL;
-            tree->type->state = RESOLVED;
-            break;
-        case NODE_LT_OP:
-            enrich_number_op(tree->lt_op);
-
-            // if we hit this, identifiers have realised to another value or you're using non-number literals.
-            assert_type(tree->lt_op->left, TY_NUMBER);
-            assert_type(tree->lt_op->right, TY_NUMBER);
-
-            tree->type->resolved_type = TY_BOOL;
-            tree->type->state = RESOLVED;
-            break;
-        case NODE_GT_OP:
-            enrich_number_op(tree->gt_op);
-
-            // if we hit this, identifiers have realised to another value or you're using non-number literals.
-            assert_type(tree->gt_op->left, TY_NUMBER);
-            assert_type(tree->gt_op->right, TY_NUMBER);
-
-            tree->type->resolved_type = TY_BOOL;
-            tree->type->state = RESOLVED;
-            break;
-        case NODE_LE_OP:
-            enrich_number_op(tree->le_op);
-
-            // if we hit this, identifiers have realised to another value or you're using non-number literals.
-            assert_type(tree->le_op->left, TY_NUMBER);
-            assert_type(tree->le_op->right, TY_NUMBER);
-
-            tree->type->resolved_type = TY_BOOL;
-            tree->type->state = RESOLVED;
-            break;
-        case NODE_GE_OP:
-            enrich_number_op(tree->ge_op);
-
-            // if we hit this, identifiers have realised to another value or you're using non-number literals.
-            assert_type(tree->ge_op->left, TY_NUMBER);
-            assert_type(tree->ge_op->right, TY_NUMBER);
-
-            tree->type->resolved_type = TY_BOOL;
-            tree->type->state = RESOLVED;
-            break;
-        case NODE_PLUS_OP:
-            enrich_number_op(tree->plus_op);
-
-            // if we hit this, identifiers have realised to another value or you're using non-number literals.
-            assert_type(tree->plus_op->left, TY_NUMBER);
-            assert_type(tree->plus_op->right, TY_NUMBER);
-
-            tree->type->resolved_type = TY_NUMBER;
-            tree->type->state = RESOLVED;
-
-            break;
-        case NODE_MINUS_OP:
-            enrich_number_op(tree->minus_op);
-
-            // if we hit this, identifiers have realised to another value or you're using non-number literals.
-            assert_type(tree->minus_op->left, TY_NUMBER);
-            assert_type(tree->minus_op->right, TY_NUMBER);
-
-            tree->type->resolved_type = TY_NUMBER;
-            tree->type->state = RESOLVED;
-            break;
-        case NODE_MULT_OP:
-            enrich_number_op(tree->mult_op);
-
-            // if we hit this, identifiers have realised to another value or you're using non-number literals.
-            assert_type(tree->minus_op->left, TY_NUMBER);
-            assert_type(tree->minus_op->right, TY_NUMBER);
-
-            tree->type->resolved_type = TY_NUMBER;
-            tree->type->state = RESOLVED;
-            break;
-        case NODE_DIVIDE_OP:
-            enrich_number_op(tree->divide_op);
-
-            // if we hit this, identifiers have realised to another value or you're using non-number literals.
-            assert_type(tree->divide_op->left, TY_NUMBER);
-            assert_type(tree->divide_op->right, TY_NUMBER);
-
-            tree->type->resolved_type = TY_NUMBER;
-            tree->type->state = RESOLVED;
-            break;
+        }
         case NODE_EMPTY:
-            tree->type->resolved_type = TY_UNIT;
-            tree->type->state = RESOLVED;
+            set_type(&tree, TY_UNIT, RESOLVED);
             break;
     }
 }
