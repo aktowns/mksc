@@ -18,7 +18,6 @@ int main(int argc, char **argv) {
     printf("mksc compiler 0.01 ashley towns <mail@ashleytowns.id.au>\n");
     char *contents = read_file(argv[1]);
 
-
     token_t *tokens = lex(contents);
 
     //print_tokens(tokens);
@@ -35,12 +34,18 @@ int main(int argc, char **argv) {
     Parse(parser, 0, NULL, &ast);
 
     if (ast != NULL && ast->is_ok) {
+        initialize_scoping(ast, NULL);
+
         printf("%sAST%s: ", RGB(100, 200, 100), ANSI_NORMAL);
         pretty_print_node(ast);
         printf("\n");
+
         printf("%sType enrichment%s: ", RGB(100, 100, 200), ANSI_NORMAL);
         enrich_tree(ast);
         pretty_print_node(ast);
+
+        printf("\n");
+        report_exports(ast);
     }
 
     mks_free_node(ast);

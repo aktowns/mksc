@@ -6,10 +6,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <mks_node.h>
+#include <uthash.h>
 
 mks_node_t *mk_node(mks_node_type_t tag) {
     mks_node_t *node = malloc(sizeof(mks_node_t));
-    node->space = malloc(sizeof(mks_space_t));
+    node->space = NULL;
 
     node->tag = tag;
     node->is_ok = true;
@@ -200,7 +201,8 @@ void mks_free_node(mks_node_t *node) {
         return;
 
     mks_free_type(node->type);
-    free(node->space);
+    mks_free_space(node->space);
+
     switch (node->tag) {
         case NODE_MODULE:
             mks_free_node(node->module->name);
@@ -307,8 +309,39 @@ mks_node_t *mk_copy(mks_node_t *src) {
     return newnode;
 }
 
+void copy_scope(mks_node_t *src, mks_node_t *dest) {
+    if (src != NULL) {
+        mks_space_t *s = NULL;
+        for(s=src->space; s != NULL; s=s->hh.next) {
+            mks_space_t *space = NULL;
+            HASH_FIND_STR(dest->space, s->id, space);
+            if (space == NULL) {
+                space = malloc(sizeof(mks_space_t));
+                space->id = s->id;
+                space->ref = s->ref;
+
+                HASH_ADD_KEYPTR(hh, dest->space, space->id, strlen(space->id), space);
+            }
+        }
+    }
+}
+
+void report_exports(mks_node_t* node) {
+    mks_space_t *s = NULL;
+    printf("module exports(%i): ", HASH_COUNT(node->space));
+    for (s = node->space; s != NULL; s = s->hh.next) {
+        char *typ = pretty_stringify_type(s->ref->type);
+        printf("%s(%s) ", s->id, typ);
+        free(typ);
+    }
+    printf("\n");
+}
+
 void initialize_scoping(mks_node_t *node, mks_node_t *parent) {
-    // initialize_scoping(node);
+    if (parent != NULL) {
+        copy_scope(parent, node);
+    }
+
     switch (node->tag) {
         case NODE_MODULE:
             initialize_scoping(node->module->body, node);
@@ -316,21 +349,59 @@ void initialize_scoping(mks_node_t *node, mks_node_t *parent) {
         case NODE_IMPORT:
             /* Hm */
             break;
-        case NODE_FUNCTION_CALL:break;
-        case NODE_FUNCTION:break;
-        case NODE_IDENTIFIER:break;
-        case NODE_NUMBER_LITERAL:break;
+        case NODE_FUNCTION_CALL:
+
+            break;
+        case NODE_FUNCTION:
+            initialize_scoping(node->function->argument, node);
+            copy_scope(node->function->argument, node->function->body);
+            initialize_scoping(node->function->body, node);
+            break;
+        case NODE_IDENTIFIER: {
+            mks_space_t *space = NULL;
+            HASH_FIND_STR(parent->space, node->identifier, space);
+            if (space == NULL) {
+                space = malloc(sizeof(mks_space_t));
+                space->id = node->identifier;
+                space->ref = node;
+                HASH_ADD_KEYPTR(hh, node->space, space->id, strlen(space->id), space);
+
+                copy_scope(node, parent);
+            }
+            break;
+        }
+        case NODE_NUMBER_LITERAL:
+            break;
         case NODE_STRING_LITERAL:
             break;
         case NODE_ARRAY_LITERAL:break;
         case NODE_SEQUENCE:
             initialize_scoping(node->sequence->left, node);
             initialize_scoping(node->sequence->right, node);
+
+            copy_scope(node, parent);
+            copy_scope(node->sequence->left, node->sequence->right);
             break;
         case NODE_TUPLE:break;
-        case NODE_ASSIGNMENT:
+        case NODE_ASSIGNMENT: {
             initialize_scoping(node->assignment->value, node);
+
+            mks_node_t *id = node->assignment->name;
+            mks_space_t *space = NULL;
+
+            HASH_FIND_STR(node->space, id->identifier, space);
+
+            if (space == NULL) {
+                space = malloc(sizeof(mks_space_t));
+                space->id = id->identifier;
+                space->ref = id;
+
+                HASH_ADD_KEYPTR(hh, node->space, space->id, strlen(space->id), space);
+
+                copy_scope(node, parent);
+            }
             break;
+        }
         case NODE_IF:
             initialize_scoping(node->if_stmt->condition, node);
             initialize_scoping(node->if_stmt->true_body, node);
@@ -338,7 +409,37 @@ void initialize_scoping(mks_node_t *node, mks_node_t *parent) {
             break;
         case NODE_BOOL:break;
         case NODE_EMPTY:break;
-        case NODE_OPERATOR:break;
+        case NODE_OPERATOR:{
+            switch (node->operator->op_type) {
+                case OP_EQ:
+                case OP_NE:
+                case OP_LT:
+                case OP_GT:
+                case OP_LE:
+                case OP_GE:
+                case OP_PLUS:
+                case OP_MINUS:
+                case OP_MULT:
+                case OP_DIVIDE:
+                    initialize_scoping(node->operator->left, node);
+                    initialize_scoping(node->operator->right, node);
+                    break;
+            }
+            break;
+        };
+    }
+}
+
+void mks_free_space(mks_space_t* space) {
+    if (space == NULL)
+        return;
+
+    mks_space_t *s, *tmp = NULL;
+    HASH_ITER(hh, space, s, tmp) {
+        HASH_DEL(space, s);
+        if (s != NULL) {
+            free(s);
+        }
     }
 }
 
@@ -394,12 +495,14 @@ char *pretty_stringify_node(mks_node_t *node) {
     char *bfr = NULL;
     char *type = pretty_stringify_type(node->type);
 
+    int cxt_count = HASH_COUNT(node->space);
+
     switch (node->tag) {
         case NODE_MODULE: {
             char *name = pretty_stringify_node(node->module->name);
             char *body = pretty_stringify_node(node->module->body);
             char *exports = pretty_stringify_node(node->module->exports);
-            asprintf(&bfr, "<(module:%s) name=%s exports=%s body=%s>", type, name, exports, body);
+            asprintf(&bfr, "<(module:%s:%i) name=%s exports=%s body=%s>", type, cxt_count, name, exports, body);
             free(name);
             free(body);
             free(exports);
@@ -409,20 +512,20 @@ char *pretty_stringify_node(mks_node_t *node) {
             char *name = pretty_stringify_node(node->import->name);
             char *qual = pretty_stringify_node(node->import->qualified);
             char *specific = pretty_stringify_node(node->import->specific);
-            asprintf(&bfr, "<(import:%s) name=%s qualified=%s specific=%s>", type, name, qual, specific);
+            asprintf(&bfr, "<(import:%s:%i) name=%s qualified=%s specific=%s>", type, cxt_count, name, qual, specific);
             free(name);
             free(qual);
             free(specific);
             break;
         }
         case NODE_IDENTIFIER: {
-            asprintf(&bfr, "<(id:%s) %s>", type, node->identifier);
+            asprintf(&bfr, "<(id:%s:%i) %s>", type, cxt_count, node->identifier);
             break;
         }
         case NODE_FUNCTION_CALL: {
             char *name = pretty_stringify_node(node->function_call->name);
             char *args = pretty_stringify_node(node->function_call->arguments);
-            asprintf(&bfr, "<(function_call:%s) name=%s args=%s>", type, name, args);
+            asprintf(&bfr, "<(function_call:%s:%i) name=%s args=%s>", type, cxt_count, name, args);
             free(name);
             free(args);
             break;
@@ -430,7 +533,7 @@ char *pretty_stringify_node(mks_node_t *node) {
         case NODE_FUNCTION: {
             char *args = pretty_stringify_node(node->function->argument);
             char *body = pretty_stringify_node(node->function->body);
-            asprintf(&bfr, "<(function:%s) args=%s body=%s>", type, args, body);
+            asprintf(&bfr, "<(function:%s:%i) args=%s body=%s>", type, cxt_count, args, body);
             free(body);
             free(args);
             break;
@@ -456,7 +559,7 @@ char *pretty_stringify_node(mks_node_t *node) {
         case NODE_SEQUENCE: {
             char *left = pretty_stringify_node(node->sequence->left);
             char *right = pretty_stringify_node(node->sequence->right);
-            asprintf(&bfr, "<(sequence:%s) left=%s right=%s>", type, left, right);
+            asprintf(&bfr, "<(sequence:%s:%i) left=%s right=%s>", type, cxt_count, left, right);
             free(left);
             free(right);
             break;
@@ -472,7 +575,7 @@ char *pretty_stringify_node(mks_node_t *node) {
         case NODE_ASSIGNMENT: {
             char *name = pretty_stringify_node(node->assignment->name);
             char *value = pretty_stringify_node(node->assignment->value);
-            asprintf(&bfr, "<(assignment:%s) %s = %s>", type, name, value);
+            asprintf(&bfr, "<(assignment:%s:%i) %s = %s>", type, cxt_count, name, value);
             free(name);
             free(value);
             break;
@@ -481,7 +584,7 @@ char *pretty_stringify_node(mks_node_t *node) {
             char *condition = pretty_stringify_node(node->if_stmt->condition);
             char *true_body = pretty_stringify_node(node->if_stmt->true_body);
             char *false_body = pretty_stringify_node(node->if_stmt->false_body);
-            asprintf(&bfr, "<(if:%s) condition=%s true_body=%s false_body=%s>", type, condition, true_body,
+            asprintf(&bfr, "<(if:%s:%i) condition=%s true_body=%s false_body=%s>", type, cxt_count, condition, true_body,
                      false_body);
             free(condition);
             free(true_body);

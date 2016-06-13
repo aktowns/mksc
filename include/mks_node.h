@@ -161,6 +161,8 @@ mks_node_t *mk_operator(mks_node_t *left, mks_node_t *right, mks_node_op_type_t 
 
 mks_node_t *mk_sequence_to_function(mks_node_t *arg, mks_node_t *ret);
 
+void initialize_scoping(mks_node_t *node, mks_node_t *parent);
+
 void mks_free_node(mks_node_t *node);
 
 char *pretty_stringify_node(mks_node_t *node);
@@ -168,5 +170,9 @@ char *pretty_stringify_node(mks_node_t *node);
 char *pretty_stringify_value(mks_node_t *node);
 
 void pretty_print_node(mks_node_t *node);
+
+void report_exports(mks_node_t* node);
+
+void mks_free_space(mks_space_t* node);
 
 #endif

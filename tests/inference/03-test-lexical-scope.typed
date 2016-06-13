@@ -1,0 +1,12 @@
+module Tests.Inference.Test3 is
+
+let is10or30(x) = if x then 10 else 30 fi;
+
+let add10(x) = x + 10;
+
+let lotsofbranches (x, y) =
+    if x then
+        y + 10;
+    else
+        y + 30;
+    fi;

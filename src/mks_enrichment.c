@@ -18,7 +18,6 @@
 #include <stdlib.h>
 #include <mks_node.h>
 
-#include "mks_node.h"
 #include "mks_enrichment.h"
 
 static inline void _assert_type(mks_node_t *src, mks_type_resolution_t typ, const char *file, int line) {
@@ -36,11 +35,41 @@ static inline void _assert_type(mks_node_t *src, mks_type_resolution_t typ, cons
     }
 }
 
+static inline void _assert_resolved(mks_node_t *src, const char *file, int line) {
+    // char *node = pretty_stringify_value(src);
+    char *node = pretty_stringify_type(src->type);
+
+    if (src->type->state != RESOLVED && src->type->kind == NULLARY) {
+        printf("TypeError: %s is undefined (%s:%i)\n", node, file, line);
+
+        free(node);
+        exit(-1);
+    } else if (src->type->kind == UNARY && src->type->value->single->state != RESOLVED) {
+        // TODO: Pull more info
+        printf("TypeError: %s is undefined (%s:%i)\n", node, file, line);
+        free(node);
+        exit(-1);
+    } else if (src->type->kind == BINARY && (src->type->value->tuple->one->state != RESOLVED ||
+                                             src->type->value->tuple->two->state != RESOLVED)) {
+        // TODO: Likewise to the above
+        printf("TypeError: %s is undefined (%s:%i)\n", node, file, line);
+        free(node);
+        exit(-1);
+    }
+
+    free(node);
+}
+
 #define assert_type(src, typ) _assert_type(src, typ, __FILE__, __LINE__)
+#define assert_resolved(src) _assert_resolved(src, __FILE__, __LINE__)
 
 void set_type(mks_node_t **node, mks_type_resolution_t res, mks_type_state_t state) {
+    if ((*node)->type->resolved_type == res && (*node)->type->state == state) {
+        return;
+    }
+
     if ((*node)->type->state == RESOLVED) {
-        printf("Cowarding refusing to override type for:\n");
+        printf("Cowardly refusing to override type for:\n");
         pretty_print_node(*node);
         printf("\n\n");
         return;
@@ -69,9 +98,18 @@ void enrich_number_op(mks_operator_t *op) {
         set_type(&(op->left), TY_NUMBER, RESOLVED);
 }
 
+mks_node_t *try_get_node_from_space(char *identifier, mks_node_t *node) {
+    mks_space_t *space = NULL;
+    HASH_FIND_STR(node->space, identifier, space);
+    if (space != NULL) {
+        return space->ref;
+    }
+
+    return NULL;
+}
+
 void enrich_tree(mks_node_t *tree) {
     if (tree->type->state == RESOLVED) {
-        printf("Cowardly refusing to resolve previously resolved type\n");
         return;
     }
 
@@ -143,18 +181,51 @@ void enrich_tree(mks_node_t *tree) {
             enrich_tree(tree->function->argument);
             enrich_tree(tree->function->body);
 
+            if (tree->function->argument->type->state == UNRESOLVED) {
+                mks_node_t *node = try_get_node_from_space(tree->function->argument->identifier, tree);
+                if (node != NULL) {
+                    printf("was able to find a resolver for %s in space: ", tree->function->argument->identifier);
+                    enrich_tree(node);
+                    if (node->type->state == UNRESOLVED && node->tag == NODE_IDENTIFIER) {
+                        printf("both nodes are unsure of our types, this is fatal.\n");
+                    } else if (node->type->state == RESOLVED) {
+                        printf("have been told my type, continuing.\n");
+                        mks_copy_type(node->type, tree->function->argument->type);
+                    }
+                }
+            }
+
             set_type(&tree, TY_FUNCTION, RESOLVED);
             tree->type->kind = BINARY;
 
             mks_copy_type(tree->function->argument->type, tree->type->value->tuple->one);
             mks_copy_type(tree->function->body->type, tree->type->value->tuple->two);
 
+            assert_resolved(tree);
             break;
         case NODE_IF:
             enrich_tree(tree->if_stmt->condition);
             enrich_tree(tree->if_stmt->true_body);
             enrich_tree(tree->if_stmt->false_body);
 
+            if (tree->if_stmt->condition->tag == NODE_IDENTIFIER &&
+                tree->if_stmt->condition->type->state == UNRESOLVED) {
+                mks_node_t *node = try_get_node_from_space(tree->if_stmt->condition->identifier, tree);
+                if (node != NULL) {
+                    printf("was able to find resolver for %s in space: ", tree->if_stmt->condition->identifier);
+                    enrich_tree(node);
+                    if (node->type->state == UNRESOLVED && node->tag == NODE_IDENTIFIER) {
+                        printf("both nodes are unsure of our types, inferring bool from if expression context\n");
+                        set_type(&tree->if_stmt->condition, TY_BOOL, RESOLVED);
+                        set_type(&node, TY_BOOL, RESOLVED);
+                    } else if (node->type->state == RESOLVED) {
+                        printf("have been told my type, continuing.\n");
+                        mks_copy_type(node->type, tree->if_stmt->condition->type);
+                    }
+                }
+            }
+
+            assert_resolved(tree->if_stmt->condition);
             assert_type(tree->if_stmt->condition, TY_BOOL);
             // both branches must return the same type
             assert_type(tree->if_stmt->false_body, tree->if_stmt->true_body->type->resolved_type);
